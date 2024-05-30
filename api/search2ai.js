@@ -19,10 +19,16 @@ async function handleRequest(req, res) {
     }
     const requestData = req.body;
     console.log('requestData: ', requestData);
-    const baseUrl = req.headers.get("X-Shansing-Base-Url");
+    const baseUrl = req.headers["x-shansing-base-url"];
     console.log('baseUrl: ', baseUrl);
-    const requestHeader = new Headers(req.headers)
-    requestHeader.delete("X-Shansing-Base-Url");
+    if (!baseUrl) {
+        throw Error('no baseUrl provided');
+    }
+    const requestHeader = {
+        ...req.headers,
+        "x-shansing-base-url": undefined,
+        "host": undefined
+    }
 
     const maxTokens = requestData.max_tokens || 3000;
 
@@ -31,7 +37,7 @@ async function handleRequest(req, res) {
     const latestUserMessage = userMessages[userMessages.length - 1];
     const latestUserMessageContent = latestUserMessage.content;
 
-    let requestBody = JSON.parse(requestData);
+    let requestBody = JSON.parse(JSON.stringify(requestData));
     requestBody.stream = false;
     requestBody.stream_options = undefined;
     requestBody.max_tokens = maxTokens;
@@ -46,10 +52,11 @@ async function handleRequest(req, res) {
 
     let openAIResponse;
     try {
-        openAIResponse = await fetch(`${apiBase}/v1/chat/completions`, {
+        console.log('sending the first request');
+        openAIResponse = await fetch(`${baseUrl}/v1/chat/completions`, {
             method: 'POST',
             headers: requestHeader,
-            body: requestBody
+            body: JSON.stringify(requestBody)
         });
     } catch (error) {
         throw Error('OpenAI API failed: ' + error.message);
@@ -83,11 +90,6 @@ async function handleRequest(req, res) {
     // console.log('开始检查是否有函数调用');
 
     let calledCustomFunction = false;
-    const availableFunctions = {
-        "search": search,
-        "news": news,
-        "crawler": crawler
-    };
     if (responseJson.choices[0].message.tool_calls) {
         const toolCalls = responseJson.choices[0].message.tool_calls;
         for (const toolCall of toolCalls) {
@@ -104,6 +106,10 @@ async function handleRequest(req, res) {
             } else if (functionName === 'news') {
                 functionResponse = await functionToCall(functionArgs.query);
                 newsCount++;
+            } else if (functionName === 'searchAndGetTheFirstPage') {
+                functionResponse = await functionToCall(functionArgs.query);
+                searchCount++;
+                crawlerCount++;
             }
             if (functionResponse != null) {
                 messages.push({
@@ -148,10 +154,10 @@ async function handleRequest(req, res) {
             messages: messages,
         };
         try {
-            let secondResponse = await fetch(`${apiBase}/v1/chat/completions`, {
+            let secondResponse = await fetch(`${baseUrl}/v1/chat/completions`, {
                 method: 'POST',
                 headers: requestHeader,
-                body: secondRequestBody
+                body: JSON.stringify(secondRequestBody)
             });
             //强制流式
             console.log('sending second response...');
@@ -214,6 +220,21 @@ async function handleRequest(req, res) {
 //         }
 //     });
 // }
+
+const availableFunctions = {
+    "search": search,
+    "news": news,
+    "crawler": crawler,
+    "searchAndGetTheFirstPage": function (query){
+        const searchResult = search(query)
+        const url = JSON.parse(searchResult).results[0]?.link;
+        const crawlerResult = crawler(url)
+        return JSON.stringify({
+            ...crawlerResult,
+            allSearchResults: JSON.parse(searchResult).results
+        })
+    }
+};
 
 function jsonToStream(jsonData) {
     return new Stream.Readable({
@@ -279,7 +300,7 @@ const tools = [
         type: "function",
         function: {
             name: "search",
-            description: "search for factors",
+            description: "search for factors (like Google)",
             parameters: {
                 type: "object",
                 properties: {
@@ -293,7 +314,7 @@ const tools = [
         type: "function",
         function: {
             name: "news",
-            description: "Search for news",
+            description: "Search for news (like Google News)",
             parameters: {
                 type: "object",
                 properties: {
@@ -307,7 +328,7 @@ const tools = [
         type: "function",
         function: {
             name: "crawler",
-            description: "Get the content of a specified url",
+            description: "Get the content of a specified url (like Firefox Reader View)",
             parameters: {
                 type: "object",
                 properties: {
@@ -318,7 +339,21 @@ const tools = [
                 required: ["url"],
             }
         }
-    }
+    },
+    {
+        type: "function",
+        function: {
+            name: "searchAndGetTheFirstPage",
+            description: "search for factors and read the first item (like I'm Feeling Lucky of Google)",
+            parameters: {
+                type: "object",
+                properties: {
+                    query: { type: "string","description": "The query to search."}
+                },
+                required: ["query"]
+            }
+        }
+    },
 ]
 
 module.exports = handleRequest;

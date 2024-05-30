@@ -88,7 +88,7 @@ module.exports = async (req, res) => {
         }
     } catch (error) {
         console.error('index error:', error);
-        response = { status: 500, body: 'index Internal Server Error' }
+        response = { status: 500, body: 'Internal Server Error: ' + error.message }
     }
     if (!res.headersSent) {
         res.statusCode = response.status;

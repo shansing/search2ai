@@ -30,7 +30,12 @@ async function crawler(url) {
         const reader = new Readability.Readability(dom.window.document);
         const article = reader.parse();
 
-        return NodeHtmlMarkdown.NodeHtmlMarkdown.translate(article?.content || '', {});
+        const markdown = NodeHtmlMarkdown.NodeHtmlMarkdown.translate(article?.content || '', {});
+
+        return JSON.stringify({
+            title: article.title,
+            markdown: markdown
+        })
     } catch (error) {
         console.error(`Error fetching or processing URL: ${error}`);
         throw error
