@@ -228,9 +228,11 @@ const availableFunctions = {
     "newsOnline": news,
     "crawler": crawler,
     "searchAndGetTheFirstPage": async function (query){
+        console.log(`searchAndGetTheFirstPage: ${JSON.stringify(query)}`);
         const searchResult = await search(query)
         const url = JSON.parse(searchResult).results[0]?.link;
         const crawlerResult = await crawler(url)
+        console.log(`searchAndGetTheFirstPage done`);
         return JSON.stringify({
             ...crawlerResult,
             allSearchResults: JSON.parse(searchResult).results
