@@ -89,7 +89,7 @@ http://localhost:3014/v1/chat/completions
 
 **Cloudflare worker**
 
-1. Copy the code of [search2openai.js](search2openai.js), or [search2gemini.js](search2gemini.js), or [search2groq.js](search2groq.js), no modifications needed! Deploy in cloudflare's worker, after going online, the worker's address can be used as your interface call's custom domain address, note the concatenation, worker address only represents the part before v1
+1. Copy the code of [search2openai.js.bak.bak](search2openai.js.bak), or [search2gemini.js.bak.bak](search2gemini.js.bak), or [search2groq.js.bak.bak](search2groq.js.bak), no modifications needed! Deploy in cloudflare's worker, after going online, the worker's address can be used as your interface call's custom domain address, note the concatenation, worker address only represents the part before v1
 2. Configure variables in the worker（only openai）
    ![Effect Example](pictures/worker.png)
 3. Configure triggers - custom domain in the worker, direct access to the worker's address in China might have issues, need to replace with custom domain

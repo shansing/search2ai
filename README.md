@@ -1,5 +1,7 @@
 **简体中文** · [English](README-EN.md)
 
+> 此为定制项目。
+
 ## 用户交流
 
 [telegram频道](https://sum4all.one/telegram)
@@ -89,7 +91,7 @@ http://localhost:3014/v1/chat/completions
 
 **Cloudflare Worker部署**
 
-1. 复制[search2openai.js](search2openai.js)或者[search2gemini.js](search2gemini.js)或者[search2groq.js](search2groq.js)的代码，不需要任何修改！在cloudflare的worker里部署，上线后的worker的地址可作为你接口调用时的自定义域名地址，注意拼接，worker地址仅代表v1前的部分
+1. 复制[search2openai.js.bak.bak](search2openai.js.bak)或者[search2gemini.js.bak.bak](search2gemini.js.bak)或者[search2groq.js.bak.bak](search2groq.js.bak)的代码，不需要任何修改！在cloudflare的worker里部署，上线后的worker的地址可作为你接口调用时的自定义域名地址，注意拼接，worker地址仅代表v1前的部分
 2. 在worker中配置环境变量
    ![效果示例](pictures/worker.png)
 3. worker里配置触发器-自定义域名，国内直接访问worker的地址可能会出问题，需要替换为自定义域名
