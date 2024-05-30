@@ -77,7 +77,7 @@ module.exports = async (req, res) => {
     // }
     let response;
     try {
-        if (req.url === '/v1/chat/completions') {
+        if (req.url.startsWith('/v1/chat/completions')) {
             response = await handleRequest(req, res);
         } else if (req.url.startsWith('/test/crawler')) {
             const url = req.body.url;
