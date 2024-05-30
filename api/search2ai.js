@@ -230,12 +230,18 @@ const availableFunctions = {
     "searchAndGetTheFirstPage": async function (query){
         console.log(`searchAndGetTheFirstPage: ${JSON.stringify(query)}`);
         const searchResult = await search(query)
-        const url = JSON.parse(searchResult).results[0]?.link;
+        const searchResultJson = JSON.parse(searchResult)
+        if (!searchResultJson.results || searchResultJson.results.length === 0) {
+            return JSON.stringify({
+                allSearchResults: []
+            })
+        }
+        const url = searchResultJson.results[0].link;
         const crawlerResult = await crawler(url)
         console.log(`searchAndGetTheFirstPage done`);
         return JSON.stringify({
             ...crawlerResult,
-            allSearchResults: JSON.parse(searchResult).results
+            allSearchResults: searchResultJson.results
         })
     }
 };
