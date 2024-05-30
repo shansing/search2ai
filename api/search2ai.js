@@ -46,7 +46,7 @@ async function handleRequest(req, res) {
         requestBody = {
             ...requestBody,
             tools: tools,
-            //qwen doesn't support it; openai has a default value
+            //qwen doesn't support it; has a default value
             // tool_choice: "auto",
         }
     }
@@ -60,24 +60,24 @@ async function handleRequest(req, res) {
             body: JSON.stringify(requestBody)
         });
     } catch (error) {
-        throw Error('OpenAI API failed: ' + error.message);
+        throw Error('API failed: ' + error.message);
     }
     if (!openAIResponse.ok) {
-        console.log('OpenAI API not ok, body:', await openAIResponse.text());
-        throw new Error('OpenAI API not ok');
+        // console.log('API not ok, body:', await openAIResponse.text());
+        throw new Error('API not ok, body:' + await openAIResponse.text());
     }
 
     let responseJson = await openAIResponse.json();
     // console.log('确认解析后的 data 对象:', data);
     if (!responseJson) {
-        throw Error('OpenAI no response');
+        throw Error('no response');
     }
-    console.log('OpenAI API response got，check if need function call...');
+    console.log('API response got，check if need function call...');
     if (!responseJson.choices || responseJson.choices.length === 0 || !responseJson.choices[0].message) {
-        throw Error('OpenAI response has no choice');
+        throw Error('response has no choice');
     }
     if (!responseJson.usage) {
-        throw Error('OpenAI response has no usage');
+        throw Error('response has no usage');
     }
 
     let firstPromptTokenNumber = responseJson.usage.prompt_tokens,
@@ -143,7 +143,7 @@ async function handleRequest(req, res) {
         });
         // return ;
     } else {
-        // 如果调用了自定义函数，再次向 OpenAI API 发送请求
+        // 如果调用了自定义函数，再次向 API 发送请求
         console.log('function call needed, sending request again');
         const secondRequestBody = {
             ...requestBody,
@@ -176,7 +176,7 @@ async function handleRequest(req, res) {
                 body: secondResponse.body
             };
         } catch (error) {
-            throw Error('OpenAI API second failed:' + error.message);
+            throw Error('API second failed:' + error.message);
         }
     }
 
