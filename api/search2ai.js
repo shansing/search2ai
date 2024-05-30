@@ -25,12 +25,12 @@ async function handleRequest(req, res) {
         throw Error('no baseUrl provided');
     }
     const requestHeader = {
-        ...req.headers,
-        "x-shansing-base-url": undefined,
-        "host": undefined
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store",
+        "Authorization": req.headers["authorization"],
     }
 
-    const maxTokens = requestData.max_tokens || 3000;
+    const maxTokens = requestData.max_tokens || 2000;
 
     const messages = requestData.messages;
     const userMessages = requestData.messages.filter(message => message.role === 'user');
@@ -46,7 +46,8 @@ async function handleRequest(req, res) {
         requestBody = {
             ...requestBody,
             tools: tools,
-            tool_choice: "auto",
+            //qwen doesn't support it; openai has a default value
+            // tool_choice: "auto",
         }
     }
 
@@ -62,6 +63,7 @@ async function handleRequest(req, res) {
         throw Error('OpenAI API failed: ' + error.message);
     }
     if (!openAIResponse.ok) {
+        console.log('OpenAI API not ok, body:', await openAIResponse.text());
         throw new Error('OpenAI API not ok');
     }
 
@@ -97,13 +99,13 @@ async function handleRequest(req, res) {
             const functionToCall = availableFunctions[functionName];
             const functionArgs = JSON.parse(toolCall.function.arguments);
             let functionResponse;
-            if (functionName === 'search') {
+            if (functionName === 'searchOnline') {
                 functionResponse = await functionToCall(functionArgs.query);
                 searchCount++;
             } else if (functionName === 'crawler') {
                 functionResponse = await functionToCall(functionArgs.url);
                 crawlerCount++;
-            } else if (functionName === 'news') {
+            } else if (functionName === 'newsOnline') {
                 functionResponse = await functionToCall(functionArgs.query);
                 newsCount++;
             } else if (functionName === 'searchAndGetTheFirstPage') {
@@ -222,13 +224,13 @@ async function handleRequest(req, res) {
 // }
 
 const availableFunctions = {
-    "search": search,
-    "news": news,
+    "searchOnline": search,
+    "newsOnline": news,
     "crawler": crawler,
-    "searchAndGetTheFirstPage": function (query){
-        const searchResult = search(query)
+    "searchAndGetTheFirstPage": async function (query){
+        const searchResult = await search(query)
         const url = JSON.parse(searchResult).results[0]?.link;
-        const crawlerResult = crawler(url)
+        const crawlerResult = await crawler(url)
         return JSON.stringify({
             ...crawlerResult,
             allSearchResults: JSON.parse(searchResult).results
@@ -299,7 +301,7 @@ const tools = [
     {
         type: "function",
         function: {
-            name: "search",
+            name: "searchOnline",
             description: "search for factors (like Google)",
             parameters: {
                 type: "object",
@@ -313,7 +315,7 @@ const tools = [
     {
         type: "function",
         function: {
-            name: "news",
+            name: "newsOnline",
             description: "Search for news (like Google News)",
             parameters: {
                 type: "object",

@@ -4,11 +4,11 @@ const { config } = require('dotenv');
 config({ path: __dirname + '/../.env' });
 
 async function search(query) {
-    console.log(`正在使用查询进行自定义搜索: ${JSON.stringify(query)}`);
-    
+    console.log(`search: ${JSON.stringify(query)}`);
+
     try {
       let results;
-      
+
       switch (process.env.SEARCH_SERVICE) {
         case "search1api":
           const search1apiResponse = await fetch('https://api.search1api.com/search/', {
@@ -25,7 +25,7 @@ async function search(query) {
           });
           results = await search1apiResponse.json();
           break;
-          
+
         case "google":
           const googleApiUrl = `https://www.googleapis.com/customsearch/v1?cx=${process.env.GOOGLE_CX}&key=${process.env.GOOGLE_KEY}&q=${encodeURIComponent(query)}`;
           const googleResponse = await fetch(googleApiUrl);
@@ -36,7 +36,7 @@ async function search(query) {
             snippet: item.snippet
           }));
           break;
-          
+
         case "bing":
           const bingApiUrl = `https://api.bing.microsoft.com/v7.0/search?q=${encodeURIComponent(query)}`;
           const bingResponse = await fetch(bingApiUrl, {
@@ -49,7 +49,7 @@ async function search(query) {
             snippet: item.snippet
           }));
           break;
-          
+
         case "serpapi":
           const serpApiUrl = `https://serpapi.com/search?api_key=${process.env.SERPAPI_KEY}&engine=google&q=${encodeURIComponent(query)}&google_domain=google.com`;
           const serpApiResponse = await fetch(serpApiUrl);
@@ -60,7 +60,7 @@ async function search(query) {
             snippet: item.snippet
           }));
           break;
-          
+
         case "serper":
           const gl = process.env.GL || "us";
           const hl = process.env.HL || "en";
@@ -80,7 +80,7 @@ async function search(query) {
             snippet: item.snippet
           }));
           break;
-          
+
         case "duckduckgo":
           const duckDuckGoApiUrl = "https://ddg.search2ai.online/search";
           const body = {
@@ -114,19 +114,19 @@ async function search(query) {
               snippet: item.content
             }));
             break;
-            
+
         default:
           console.error(`不支持的搜索服务: ${process.env.SEARCH_SERVICE}`);
           return `不支持的搜索服务: ${process.env.SEARCH_SERVICE}`;
       }
-      
+
       const data = {
         results: results
       };
-      
-      console.log('自定义搜索服务调用完成');
+
+      console.log('search done');
       return JSON.stringify(data);
-      
+
     } catch (error) {
       console.error(`在 search 函数中捕获到错误: ${error}`);
       return `在 search 函数中捕获到错误: ${error}`;

@@ -31,6 +31,7 @@ async function crawler(url) {
         const article = reader.parse();
 
         const markdown = NodeHtmlMarkdown.NodeHtmlMarkdown.translate(article?.content || '', {});
+        console.log('crawler done');
 
         return JSON.stringify({
             title: article.title,
