@@ -3,6 +3,7 @@ const jsdom = require("jsdom");
 const Readability = require('@mozilla/readability');
 const NodeHtmlMarkdown = require('node-html-markdown');
 const process = require("process");
+const {AbortError} = require("node-fetch");
 
 async function crawler(url) {
     console.log(`crawler:`, url);
@@ -56,4 +57,4 @@ async function crawler(url) {
     }
 }
 
-module.exports = {crawler, CrawlerResult};
+module.exports = crawler;

@@ -103,6 +103,7 @@ async function handleRequest(req, res) {
     let calledCustomFunction = false;
     if (responseJson.choices[0].message.tool_calls) {
         const toolCalls = responseJson.choices[0].message.tool_calls;
+        const unprocessedMessages = JSON.parse(JSON.stringify(messages));
         for (const toolCall of toolCalls) {
             const functionName = toolCall.function.name;
             const functionToCall = availableFunctions[functionName];
@@ -122,7 +123,7 @@ async function handleRequest(req, res) {
                 searchCount++;
                 crawlerCount++;
             }
-            functionResponse = cutAndStringify(functionResponse, requestBody.model, messages, maxTokens)
+            functionResponse = cutAndStringify(functionResponse, requestBody.model, unprocessedMessages, maxTokens, toolCalls.length)
             if (functionResponse != null) {
                 messages.push({
                     tool_call_id: toolCall.id,
@@ -206,12 +207,13 @@ const modelMaxTotalTokenNumber = [
     {name:"gemini-", number:128_000},
     {name:"", number:4_000} //default
 ]
-function cutAndStringify(json, modelName, existedMessages, maxCompletionTokenNumber) {
-    const maxTotalTokenNumber = modelMaxTotalTokenNumber.find(obj => modelName.startsWith(obj.name)).number
-    const maxPromptTokenNumber = maxTotalTokenNumber - maxCompletionTokenNumber
+function cutAndStringify(json, modelName, unprocessedMessages, maxCompletionTokenNumber, divisor) {
+    // console.log("cutAndStringify...")
+    const maxTotalTokenNumber = modelMaxTotalTokenNumber.find(obj => modelName.startsWith(obj.name)).number || 4000
+    const maxPromptTokenNumber = Math.round((maxTotalTokenNumber - maxCompletionTokenNumber) / divisor)
     let searchCutCount = 0, contentCutCount = 0
     //非常粗略的估计
-    while (!tokenizer.isWithinTokenLimit(JSON.stringify({json, existedMessages}), maxPromptTokenNumber)) {
+    while (!tokenizer.isWithinTokenLimit(JSON.stringify({json, unprocessedMessages}), maxPromptTokenNumber)) {
         //先移出搜索结果（如果有）
         if (!json.allSearchResults || json.allSearchResults.length === 0) {
             break;
@@ -219,7 +221,7 @@ function cutAndStringify(json, modelName, existedMessages, maxCompletionTokenNum
         json.allSearchResults.pop()
         searchCutCount++
     }
-    while (!tokenizer.isWithinTokenLimit(JSON.stringify({json, existedMessages}), maxPromptTokenNumber)) {
+    while (!tokenizer.isWithinTokenLimit(JSON.stringify({json, unprocessedMessages}), maxPromptTokenNumber)) {
         //再裁剪内容（如果有）
         let contentLength = json?.content?.length || 0;
         if (contentLength <= 50) {
@@ -229,8 +231,8 @@ function cutAndStringify(json, modelName, existedMessages, maxCompletionTokenNum
         json.content = json.content.substring(0, contentLength);
         contentCutCount++
     }
-    console.log("cutAndStringify", {
-        modelName, maxCompletionTokenNumber, maxTotalTokenNumber, maxPromptTokenNumber, searchCutCount, contentCutCount,
+    console.log("cutAndStringify done", {
+        modelName, maxCompletionTokenNumber, maxTotalTokenNumber, divisor, maxPromptTokenNumber, searchCutCount, contentCutCount,
         leftSearchResults: json?.allSearchResults?.length || 0,
         leftContentLength: json?.content?.length || 0,
     })
@@ -390,7 +392,7 @@ const tools = [
         type: "function",
         function: {
             name: "searchAndReadFirstResult",
-            description: "Perform a web search and read the content of the first result. (like I'm Feeling Lucky of Google)",
+            description: "Perform a web search and read the content of the first search result. (like I'm Feeling Lucky of Google)",
             parameters: {
                 type: "object",
                 properties: {

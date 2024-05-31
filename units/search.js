@@ -116,8 +116,7 @@ async function search(query) {
             break;
 
         default:
-          console.error(`不支持的搜索服务: ${process.env.SEARCH_SERVICE}`);
-          return `不支持的搜索服务: ${process.env.SEARCH_SERVICE}`;
+          throw Error(`不支持的搜索服务: ${process.env.SEARCH_SERVICE}`);
       }
 
       console.log('search done', query);
