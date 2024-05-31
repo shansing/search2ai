@@ -2,8 +2,10 @@ const fetch = require('node-fetch');
 const search = require('../units/search.js');
 const crawler = require('../units/crawler.js');
 const news = require('../units/news.js');
+const lucky = require('../units/lucky.js');
 const { config } = require('dotenv');
 const Stream = require('stream');
+const tokenizer = require('gpt-tokenizer');
 
 config();
 
@@ -18,7 +20,7 @@ async function handleRequest(req, res) {
         throw Error('Method Not Allowed');
     }
     const requestData = req.body;
-    console.log('requestData: ', requestData);
+    // console.log('requestData: ', requestData);
     const baseUrl = req.headers["x-shansing-base-url"];
     console.log('baseUrl: ', baseUrl);
     if (!baseUrl) {
@@ -80,7 +82,7 @@ async function handleRequest(req, res) {
         throw Error('response has no usage');
     }
 
-    let firstPromptTokenNumber = responseJson.usage.prompt_tokens,
+    let firstmaxPromptTokenNumber = responseJson.usage.prompt_tokens,
     firstCompletionTokenNumber = responseJson.usage.completion_tokens,
     searchCount = 0,
     newsCount = 0,
@@ -91,6 +93,13 @@ async function handleRequest(req, res) {
     // 检查是否有函数调用
     // console.log('开始检查是否有函数调用');
 
+
+    const availableFunctions = {
+        "searchWeb": search,
+        "searchNews": news,
+        "readWebPage": crawler,
+        "searchAndReadFirstResult": lucky
+    };
     let calledCustomFunction = false;
     if (responseJson.choices[0].message.tool_calls) {
         const toolCalls = responseJson.choices[0].message.tool_calls;
@@ -99,20 +108,21 @@ async function handleRequest(req, res) {
             const functionToCall = availableFunctions[functionName];
             const functionArgs = JSON.parse(toolCall.function.arguments);
             let functionResponse;
-            if (functionName === 'searchOnline') {
+            if (functionName === 'searchWeb') {
                 functionResponse = await functionToCall(functionArgs.query);
                 searchCount++;
-            } else if (functionName === 'crawler') {
+            } else if (functionName === 'readWebPage') {
                 functionResponse = await functionToCall(functionArgs.url);
                 crawlerCount++;
-            } else if (functionName === 'newsOnline') {
+            } else if (functionName === 'searchNews') {
                 functionResponse = await functionToCall(functionArgs.query);
                 newsCount++;
-            } else if (functionName === 'searchAndGetTheFirstPage') {
+            } else if (functionName === 'searchAndReadFirstResult') {
                 functionResponse = await functionToCall(functionArgs.query);
                 searchCount++;
                 crawlerCount++;
             }
+            functionResponse = cutAndStringify(functionResponse, requestBody.model, messages, maxTokens)
             if (functionResponse != null) {
                 messages.push({
                     tool_call_id: toolCall.id,
@@ -167,7 +177,7 @@ async function handleRequest(req, res) {
             return {
                 status: secondResponse.status,
                 headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache',...corsHeaders,
-                    'X-Shansing-First-Prompt-Token-Number': firstPromptTokenNumber,
+                    'X-Shansing-First-Prompt-Token-Number': firstmaxPromptTokenNumber,
                     'X-Shansing-First-Completion-Token-Number': firstCompletionTokenNumber,
                     'X-Shansing-Search-Count': searchCount,
                     'X-Shansing-News-Count': newsCount,
@@ -180,6 +190,55 @@ async function handleRequest(req, res) {
         }
     }
 
+}
+
+const modelMaxTotalTokenNumber = [
+    {name:"gpt-4o", number:128_000},
+    {name:"gpt-4-turbo", number:128_000},
+    {name:"gpt-4", number:8192},
+    {name:"gpt-3.5-turbo", number:16385},
+    {name:"qwen-turbo", number:6_000},
+    {name:"qwen-plus", number:30_000},
+    {name:"qwen-max-longcontext", number:28_000},
+    {name:"qwen-max", number:6_000},
+    { name: "qwen-long", number: 9_000 }, // it's not 10_000_000
+    {name:"qwen-vl-", number:6_000},
+    {name:"gemini-", number:128_000},
+    {name:"", number:4_000} //default
+]
+function cutAndStringify(json, modelName, existedMessages, maxCompletionTokenNumber) {
+    const maxTotalTokenNumber = modelMaxTotalTokenNumber.find(obj => modelName.startsWith(obj.name)).number
+    const maxPromptTokenNumber = maxTotalTokenNumber - maxCompletionTokenNumber
+    let searchCutCount = 0, contentCutCount = 0
+    //非常粗略的估计
+    while (!tokenizer.isWithinTokenLimit(JSON.stringify({json, existedMessages}), maxPromptTokenNumber)) {
+        //先移出搜索结果（如果有）
+        if (!json.allSearchResults || json.allSearchResults.length === 0) {
+            break;
+        }
+        json.allSearchResults.pop()
+        searchCutCount++
+    }
+    while (!tokenizer.isWithinTokenLimit(JSON.stringify({json, existedMessages}), maxPromptTokenNumber)) {
+        //再裁剪内容（如果有）
+        let contentLength = json?.content?.length || 0;
+        if (contentLength <= 50) {
+            break;
+        }
+        contentLength -= 10;
+        json.content = json.content.substring(0, contentLength);
+        contentCutCount++
+    }
+    console.log("cutAndStringify", {
+        modelName, maxCompletionTokenNumber, maxTotalTokenNumber, maxPromptTokenNumber, searchCutCount, contentCutCount,
+        leftSearchResults: json?.allSearchResults?.length || 0,
+        leftContentLength: json?.content?.length || 0,
+    })
+    // if (!tokenizer.isWithinTokenLimit(JSON.stringify({json, existedMessages}), maxPromptTokenNumber)) {
+    //     throw Error("Need too many tokens; unable to cut the prompts to fit the requirement. Please try to clear the history messages, or provide a smaller max_tokens, or switch to a model allowing more context-tokens. " +
+    //         "maxTotalTokenNumber=" + maxTotalTokenNumber + ", maxPromptTokenNumber=" + maxPromptTokenNumber)
+    // }
+    return JSON.stringify(json)
 }
 
 // function jsonToStream(jsonData) {
@@ -222,29 +281,6 @@ async function handleRequest(req, res) {
 //         }
 //     });
 // }
-
-const availableFunctions = {
-    "searchOnline": search,
-    "newsOnline": news,
-    "crawler": crawler,
-    "searchAndGetTheFirstPage": async function (query){
-        console.log(`searchAndGetTheFirstPage: ${JSON.stringify(query)}`);
-        const searchResult = await search(query)
-        const searchResultJson = JSON.parse(searchResult)
-        if (!searchResultJson.results || searchResultJson.results.length === 0) {
-            return JSON.stringify({
-                allSearchResults: []
-            })
-        }
-        const url = searchResultJson.results[0].link;
-        const crawlerResult = await crawler(url)
-        console.log(`searchAndGetTheFirstPage done`);
-        return JSON.stringify({
-            ...crawlerResult,
-            allSearchResults: searchResultJson.results
-        })
-    }
-};
 
 function jsonToStream(jsonData) {
     return new Stream.Readable({
@@ -309,12 +345,12 @@ const tools = [
     {
         type: "function",
         function: {
-            name: "searchOnline",
-            description: "search for factors (like Google)",
+            name: "searchWeb",
+            description: "Perform a web search using specific keywords. (like Google search)",
             parameters: {
                 type: "object",
                 properties: {
-                    query: { type: "string","description": "The query to search."}
+                    query: { type: "string","description": "Keywords for the web search."}
                 },
                 required: ["query"]
             }
@@ -323,12 +359,12 @@ const tools = [
     {
         type: "function",
         function: {
-            name: "newsOnline",
-            description: "Search for news (like Google News)",
+            name: "searchNews",
+            description: "Search for news articles using specific keywords. (like Google News)",
             parameters: {
                 type: "object",
                 properties: {
-                    query: { type: "string", description: "The query to search for news." }
+                    query: { type: "string", description: "Keywords for the news search."}
                 },
                 required: ["query"]
             }
@@ -337,14 +373,14 @@ const tools = [
     {
         type: "function",
         function: {
-            name: "crawler",
-            description: "Get the content of a specified url (like Firefox Reader View)",
+            name: "readWebPage",
+            description: "Fetch and parse the content of the given URL's webpage. (like Reader View of Firefox)",
             parameters: {
                 type: "object",
                 properties: {
                     url: {
                         type: "string",
-                        description: "The URL of the webpage"},
+                        description: "The URL of the webpage."},
                 },
                 required: ["url"],
             }
@@ -353,12 +389,12 @@ const tools = [
     {
         type: "function",
         function: {
-            name: "searchAndGetTheFirstPage",
-            description: "search for factors and read the first item (like I'm Feeling Lucky of Google)",
+            name: "searchAndReadFirstResult",
+            description: "Perform a web search and read the content of the first result. (like I'm Feeling Lucky of Google)",
             parameters: {
                 type: "object",
                 properties: {
-                    query: { type: "string","description": "The query to search."}
+                    query: { type: "string","description": "Keywords for the web search."}
                 },
                 required: ["query"]
             }

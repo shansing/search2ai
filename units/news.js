@@ -4,7 +4,7 @@ const { config } = require('dotenv');
 config({ path: __dirname + '/../.env' });
 
 async function news(query) {
-    console.log(`news: ${JSON.stringify(query)}`);
+    console.log(`news:`, query);
 
     try {
       let results;
@@ -27,7 +27,7 @@ async function news(query) {
           break;
 
         case "google":
-          const googleApiUrl = `https://www.googleapis.com/customsearch/v1?cx=${process.env.GOOGLE_CX}&key=${process.env.GOOGLE_KEY}&q=${encodeURIComponent(query)}&tbm=nws`;
+          const googleApiUrl = `https://www.googleapis.com/customsearch/v1?cx=${process.env.GOOGLE_CX}&key=${process.env.GOOGLE_KEY}&q=${encodeURIComponent(query)}&tbm=nws&gl=us`;
           const googleResponse = await fetch(googleApiUrl);
           const googleData = await googleResponse.json();
           results = googleData.items.slice(0, process.env.MAX_RESULTS).map((item) => ({
@@ -120,12 +120,10 @@ async function news(query) {
           return `不支持的搜索服务: ${process.env.SEARCH_SERVICE}`;
       }
 
-      const data = {
-        results: results
+      console.log('news done', query);
+      return {
+        allSearchResults: results
       };
-
-      console.log('news done');
-      return JSON.stringify(data);
 
     } catch (error) {
       console.error(`在 news 函数中捕获到错误: ${error}`);

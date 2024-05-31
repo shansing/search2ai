@@ -84,11 +84,11 @@ module.exports = async (req, res) => {
             response = { status: 200, body: await crawler(url) };
         } else {
             // response = await handleOtherRequest(apiBase, apiKey, req, req.url);
-            response = { status: 500, body: 'path not supported, url=' + req.url }
+            response = { status: 500, body: '[Shansing He2per][search2ai]path not supported, url=' + req.url }
         }
     } catch (error) {
         console.error('index error:', error);
-        response = { status: 500, body: 'Internal Server Error: ' + error.message }
+        response = { status: 500, body: '[Shansing He2per][search2ai]Internal Server Error: ' + error.message }
     }
     if (!res.headersSent) {
         res.statusCode = response.status;
@@ -96,10 +96,10 @@ module.exports = async (req, res) => {
             res.setHeader(key, value);
         });
         if (response.body instanceof Stream) {
-            console.log('Sending response as a stream'); // 添加的日志
+            // console.log('Sending response as a stream'); // 添加的日志
             response.body.pipe(res);
         } else {
-            console.log('Sending response as a string or Buffer'); // 添加的日志
+            // console.log('Sending response as a string or Buffer'); // 添加的日志
             res.end(response.body);
         }
     }

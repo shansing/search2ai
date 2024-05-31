@@ -4,7 +4,7 @@ const { config } = require('dotenv');
 config({ path: __dirname + '/../.env' });
 
 async function search(query) {
-    console.log(`search: ${JSON.stringify(query)}`);
+    console.log(`search:`, query);
 
     try {
       let results;
@@ -27,12 +27,12 @@ async function search(query) {
           break;
 
         case "google":
-          const googleApiUrl = `https://www.googleapis.com/customsearch/v1?cx=${process.env.GOOGLE_CX}&key=${process.env.GOOGLE_KEY}&q=${encodeURIComponent(query)}`;
+          const googleApiUrl = `https://www.googleapis.com/customsearch/v1?cx=${process.env.GOOGLE_CX}&key=${process.env.GOOGLE_KEY}&q=${encodeURIComponent(query)}&gl=us`;
           const googleResponse = await fetch(googleApiUrl);
           const googleData = await googleResponse.json();
           results = googleData.items.slice(0, process.env.MAX_RESULTS).map((item) => ({
             title: item.title,
-            link: item.link,
+            url: item.link,
             snippet: item.snippet
           }));
           break;
@@ -45,7 +45,7 @@ async function search(query) {
           const bingData = await bingResponse.json();
           results = bingData.webPages.value.slice(0, process.env.MAX_RESULTS).map((item) => ({
             title: item.name,
-            link: item.url,
+            url: item.url,
             snippet: item.snippet
           }));
           break;
@@ -56,7 +56,7 @@ async function search(query) {
           const serpApiData = await serpApiResponse.json();
           results = serpApiData.organic_results.slice(0, process.env.MAX_RESULTS).map((item) => ({
             title: item.title,
-            link: item.link,
+            url: item.link,
             snippet: item.snippet
           }));
           break;
@@ -76,7 +76,7 @@ async function search(query) {
           const serperData = await serperResponse.json();
           results = serperData.organic.slice(0, process.env.MAX_RESULTS).map((item) => ({
             title: item.title,
-            link: item.link,
+            url: item.link,
             snippet: item.snippet
           }));
           break;
@@ -97,7 +97,7 @@ async function search(query) {
           const duckDuckGoData = await duckDuckGoResponse.json();
           results = duckDuckGoData.results.map((item) => ({
             title: item.title,
-            link: item.href,
+            url: item.href,
             snippet: item.body
           }));
           break;
@@ -110,7 +110,7 @@ async function search(query) {
             const searXNGData = await searXNGResponse.json();
             results = searXNGData.results.slice(0, MAX_RESULTS).map((item) => ({
               title: item.title,
-              link: item.url,
+              url: item.url,
               snippet: item.content
             }));
             break;
@@ -120,13 +120,10 @@ async function search(query) {
           return `不支持的搜索服务: ${process.env.SEARCH_SERVICE}`;
       }
 
-      const data = {
-        results: results
+      console.log('search done', query);
+      return {
+        allSearchResults: results
       };
-
-      console.log('search done');
-      return JSON.stringify(data);
-
     } catch (error) {
       console.error(`在 search 函数中捕获到错误: ${error}`);
       return `在 search 函数中捕获到错误: ${error}`;
