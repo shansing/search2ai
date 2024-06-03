@@ -1,4 +1,5 @@
 const tokenizer = require("gpt-tokenizer");
+const runes = require('runes')
 
 const Common = (function() {
 
@@ -38,7 +39,7 @@ const Common = (function() {
                     break;
                 }
                 contentLength -= 10;
-                json.content = json.content.substring(0, contentLength);
+                json.content = runes.substr(json.content, 0, contentLength);
                 contentCutCount++
             }
             console.log("cut done", {
@@ -52,6 +53,8 @@ const Common = (function() {
                 leftSearchResults: json?.allSearchResults?.length || 0,
                 leftContentLength: json?.content?.length || 0,
             })
+            //TODO
+            console.log(json.content)
             // if (!tokenizer.isWithinTokenLimit(JSON.stringify({json, existedMessages}), maxPromptTokenNumber)) {
             //     throw Error("Need too many tokens; unable to cut the prompts to fit the requirement. Please try to clear the history messages, or provide a smaller max_tokens, or switch to a model allowing more context-tokens. " +
             //         "maxTotalTokenNumber=" + maxTotalTokenNumber + ", maxPromptTokenNumber=" + maxPromptTokenNumber)

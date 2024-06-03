@@ -212,8 +212,7 @@ async function handleRequest(req, res) {
             });
             //强制流式
             console.log('[gemini]sending second response...');
-            //TODO
-            console.log('[gemini]secondRequestBody', JSON.stringify(secondRequestBody));
+            // console.log('[gemini]secondRequestBody', JSON.stringify(secondRequestBody));
 
             return {
                 status: secondResponse.status,
