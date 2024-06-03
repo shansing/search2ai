@@ -142,32 +142,10 @@ async function handleRequest(req, res) {
             functionResponse = Common.cut(functionResponse, model, unprocessedContents, maxTokens, functionCalls.length)
             if (functionResponse != null) {
                 responseParts.push({
-                    // "functionResponse": {
-                    //     "name": functionName,
-                    //     "response": JSON.stringify(functionResponse)
-                    // }
-
-                    // "functionResponse": {
-                    //     "name": functionName,
-                    //     "response": {
-                    //         "name": functionName,
-                    //         "content": JSON.stringify(functionResponse)
-                    //     }
-                    // }
-
                     "functionResponse": {
                         "name": functionName,
-                        "response": {
-                            "name": functionName,
-                            "content": functionResponse
-                        }
+                        "response": functionResponse
                     }
-
-                    // 是的，下面这种不行，不要简单看 REST 结构体以为能行
-                    // "functionResponse": {
-                    //     "name": functionName,
-                    //     "response": functionResponse
-                    // }
                 })
                 calledCustomFunction = true;
             }
