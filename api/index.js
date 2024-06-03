@@ -1,6 +1,7 @@
 // index.js 示例
 // const fetch = require('node-fetch');
-const handleRequest = require('./search2ai.js');
+const handleOpenaiRequest = require('./openai.js');
+const handleGeminiRequest = require('./gemini.js');
 const process = require('process');
 const Stream = require('stream');
 const http = require('http');
@@ -78,7 +79,9 @@ module.exports = async (req, res) => {
     let response;
     try {
         if (req.url.startsWith('/v1/chat/completions')) {
-            response = await handleRequest(req, res);
+            response = await handleOpenaiRequest(req, res);
+        } else if (req.url.startsWith('/v1beta/models')) {
+            response = await handleGeminiRequest(req, res);
         } else if (req.url.startsWith('/test/crawler')) {
             const url = req.body.url;
             response = { status: 200, body: await crawler(url) };
@@ -154,3 +157,4 @@ const PORT = process.env.PORT || 3014;
 server.listen(PORT, () => {
     console.log(`Server is listening on port ${PORT}`);
 });
+
