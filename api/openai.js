@@ -106,6 +106,10 @@ async function handleRequest(req, res) {
         const toolCalls = responseJson.choices[0].message.tool_calls;
         const unprocessedMessages = JSON.parse(JSON.stringify(messages));
         for (const toolCall of toolCalls) {
+            if (!toolCall.id) {
+                // qwen-max bug on 2024/6/4
+                throw Error('API function call temporarily unavailable')
+            }
             const functionName = toolCall.function.name;
             const functionToCall = availableFunctions[functionName];
             const functionArgs = JSON.parse(toolCall.function.arguments);
