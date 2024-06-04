@@ -38,7 +38,7 @@ const Common = (function() {
                 if (contentLength <= 50) {
                     break;
                 }
-                contentLength -= 10;
+                contentLength -= 20;
                 json.content = runes.substr(json.content, 0, contentLength);
                 contentCutCount++
             }
