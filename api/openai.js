@@ -21,10 +21,12 @@ async function handleRequest(req, res) {
     }
     const requestData = req.body;
     // console.log('[openai]requestData: ', requestData);
-    const baseUrl = req.headers["x-shansing-base-url"];
+    let baseUrl = req.headers["x-shansing-base-url"];
     console.log('[openai]baseUrl: ', baseUrl);
     if (!baseUrl) {
-        throw Error('[openai]no baseUrl provided');
+        // throw Error('[openai]no baseUrl provided');
+        baseUrl = 'https://api.openai.com'
+        console.log('[openai]using default baseUrl');
     }
     const requestHeader = {
         "Content-Type": "application/json",
