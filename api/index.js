@@ -84,7 +84,7 @@ module.exports = async (req, res) => {
             response = await handleGeminiRequest(req, res);
         } else if (req.url.startsWith('/test/crawler')) {
             const url = req.body.url;
-            response = { status: 200, body: await crawler(url) };
+            response = { status: 200, body: JSON.stringify(await crawler(url)) };
         } else {
             // response = await handleOtherRequest(apiBase, apiKey, req, req.url);
             response = { status: 500, body: '[Shansing He2per][search2ai]path not supported, url=' + req.url }
