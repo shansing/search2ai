@@ -22,7 +22,7 @@ const Common = (function() {
             // console.log("cut...")
             const maxTotalTokenNumber = modelMaxTotalTokenNumber.find(obj => modelName.startsWith(obj.name)).number || 4000
             const maxPromptTokenNumber = Math.round((maxTotalTokenNumber - maxCompletionTokenNumber) / divisor)
-            let searchCutCount = 0, contentCutCount = 0
+            let searchCutCount = 0, cutLength = 0
             //非常粗略的估计
             while (!tokenizer.isWithinTokenLimit(JSON.stringify({json, unprocessedMessages}), maxPromptTokenNumber)) {
                 //先移出搜索结果（如果有）
@@ -32,15 +32,16 @@ const Common = (function() {
                 json.allSearchResults.pop()
                 searchCutCount++
             }
-            while (!tokenizer.isWithinTokenLimit(JSON.stringify({json, unprocessedMessages}), maxPromptTokenNumber)) {
+            if (json.content && json?.content?.length || 0 > 0) {
                 //再裁剪内容（如果有）
-                let contentLength = json?.content?.length || 0;
-                if (contentLength <= 50) {
-                    break;
+                let estimatedText = JSON.stringify({json, unprocessedMessages});
+                while (!tokenizer.isWithinTokenLimit(estimatedText.substring(0, estimatedText.length - cutLength), maxPromptTokenNumber)) {
+                    if (json.content.length - cutLength <= 50) {
+                        break;
+                    }
+                    cutLength += 20
                 }
-                contentLength -= 20;
-                json.content = runes.substr(json.content, 0, contentLength);
-                contentCutCount++
+                json.content = runes.substr(json.content, 0, json.content.length - cutLength);
             }
             console.log("cut done", {
                 modelName,
@@ -49,7 +50,7 @@ const Common = (function() {
                 divisor,
                 maxPromptTokenNumber,
                 searchCutCount,
-                contentCutCount,
+                cutLength,
                 leftSearchResults: json?.allSearchResults?.length || 0,
                 leftContentLength: json?.content?.length || 0,
             })
