@@ -35,13 +35,17 @@ const Common = (function() {
             if (json.content && json?.content?.length || 0 > 0) {
                 //再裁剪内容（如果有）
                 let estimatedText = JSON.stringify({json, unprocessedMessages});
-                while (!tokenizer.isWithinTokenLimit(estimatedText.substring(0, estimatedText.length - cutLength), maxPromptTokenNumber)) {
-                    if (json.content.length - cutLength <= 50) {
-                        break;
+                if (!tokenizer.isWithinTokenLimit(estimatedText.substring(0, estimatedText.length), maxPromptTokenNumber)) {
+                    const gptTokens = tokenizer.encode(estimatedText);
+                    cutLength = estimatedText.length - Math.round(estimatedText.length / gptTokens.length * maxPromptTokenNumber)
+                    while (!tokenizer.isWithinTokenLimit(estimatedText.substring(0, estimatedText.length - cutLength), maxPromptTokenNumber)) {
+                        if (json.content.length - cutLength <= 50) {
+                            break;
+                        }
+                        cutLength += 10
                     }
-                    cutLength += 20
+                    json.content = runes.substr(json.content, 0, json.content.length - cutLength);
                 }
-                json.content = runes.substr(json.content, 0, json.content.length - cutLength);
             }
             console.log("cut done", {
                 modelName,
