@@ -37,7 +37,7 @@ async function crawler(url) {
         console.log("crawler MIME Type:", mimeType);
         let result;
         if (!mimeType) {
-            result = await userNinjaAi(url)
+            result = await useNinjaAi(url)
         } else if (mimeType === 'text/html') {
             result = await processHtml(response, url)
         } else if (mimeType.startsWith('text/') || mimeType.includes('markdown')) {
@@ -48,15 +48,16 @@ async function crawler(url) {
             }
         } else { // if (mimeType.includes('pdf'))
             // pdf and the others
-            result = await userNinjaAi(url)
+            result = await useNinjaAi(url)
         }
 
         console.log('crawler done', url);
         return result
     } catch (error) {
         if (error instanceof AbortError) {
-            console.error('crawler AbortError', error);
-            throw Error('Timeout, the request has been interrupted. The specified webpage may be unreachable.');
+            console.error('crawler AbortError, try using ninja ai', error);
+            return await useNinjaAi(url)
+            // throw Error('Timeout, the request has been interrupted. The specified webpage may be unreachable.');
         } else {
             console.error(`Error fetching or processing URL: ${error}`);
             throw error
@@ -82,14 +83,15 @@ async function processHtml(response, url) {
     }
 }
 
-async function userNinjaAi(url) {
-    console.log(`crawler userNinjaAi`, url);
+async function useNinjaAi(url) {
+    const ninjaUrl = 'https://r.jina.ai/' + url
+    console.log(`crawler useNinjaAi`, ninjaUrl);
     const controller = new AbortController();
     const timeout = setTimeout(() => {
         controller.abort();
     }, 6_000);
     try {
-        const response = await fetch('https://r.jina.ai/' + url, {
+        const response = await fetch(ninjaUrl, {
             signal: controller.signal,
             method: 'GET',
             redirect: "follow",
