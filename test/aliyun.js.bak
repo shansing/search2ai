@@ -1,0 +1,194 @@
+// for qwen-max bug on 2024/6/4
+
+const baseUrl = 'https://dashscope.aliyuncs.com/compatible-mode'
+const apiKey = '???????'
+
+async function main() {
+    const userMessage = "你现在有能力联网搜索、访问网页。请用英语关键词搜索，用中文回答我的问题，并给出参考来源：\n" +
+        "Firefox 127正式版预计什么时候发布"
+
+    const requestHeader = {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store",
+        "Authorization": "Bearer " + apiKey,
+    }
+    const requestBody = {
+        "messages": [
+            createMessage("user", userMessage)
+        ],
+        "stream": false,
+        "model": "qwen-max",
+        "temperature": 1,
+        "presence_penalty": 0,
+        "frequency_penalty": 0,
+        "top_p": 0.99,
+        "max_tokens": 2000,
+        "tools": tools
+    }
+    const messages = requestBody.messages
+    console.log('[openai]发送第一轮请求……requestBody', JSON.stringify(requestBody));
+    const response = await fetch(`${baseUrl}/v1/chat/completions`, {
+        method: 'POST',
+        headers: requestHeader,
+        body: JSON.stringify(requestBody)
+    });
+
+    let responseJson = await response.json();
+    // console.log('[openai]确认解析后的 data 对象:', data);
+    if (!responseJson) {
+        throw Error('[openai]no response');
+    }
+    messages.push(responseJson.choices[0].message);
+    // console.log('[openai]更新后的 messages 数组:', messages);
+    // 检查是否有函数调用
+    console.log('[openai]开始检查是否有函数调用');
+    const availableFunctions = {
+        "searchWeb": search,
+    };
+    let calledCustomFunction = false;
+    if (responseJson.choices[0].message.tool_calls) {
+        const toolCalls = responseJson.choices[0].message.tool_calls;
+        const unprocessedMessages = JSON.parse(JSON.stringify(messages));
+        for (const toolCall of toolCalls) {
+            const functionName = toolCall.function.name;
+            const functionToCall = availableFunctions[functionName];
+            const functionArgs = JSON.parse(toolCall.function.arguments);
+            let functionResponse;
+            if (functionName === 'searchWeb') {
+                functionResponse = await functionToCall(functionArgs.query);
+            }
+            functionResponse = JSON.stringify(functionResponse)
+            if (functionResponse != null) {
+                messages.push({
+                    tool_call_id: toolCall.id,
+                    role: "tool",
+                    name: functionName,
+                    content: functionResponse,
+                });
+                calledCustomFunction = true;
+            }
+        }
+    }
+    console.log('[openai]function call checked');
+
+    if (!calledCustomFunction) {
+        // 没有调用自定义函数，直接返回原始回复
+        throw Error("这不是要测试的情况")
+    } else {
+        // 如果调用了自定义函数，再次向 API 发送请求
+        console.log('[openai]function call needed, sending request again');
+        const secondRequestBody = {
+            ...requestBody,
+            //这里即使改成流式、非流式，回答都不对
+            // stream: true,
+            // stream_options: {
+            //     include_usage: true,
+            // },
+            //摘除tools
+            tools: undefined,
+            tool_choice: undefined,
+            messages: messages,
+        };
+        try {
+            console.log('[openai]sending second response...');
+            console.log('[sending]secondRequestBody', JSON.stringify(secondRequestBody));
+            let secondResponse = await fetch(`${baseUrl}/v1/chat/completions`, {
+                method: 'POST',
+                headers: requestHeader,
+                body: JSON.stringify(secondRequestBody)
+            });
+            //强制流式
+
+            // return {
+            //     status: secondResponse.status,
+            //     headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache',...corsHeaders,
+            //     },
+            //     body: secondResponse.body
+            // };
+            console.log("第二轮 secondResponse", JSON.stringify(await secondResponse.json()));
+        } catch (error) {
+            throw Error('[openai]API second failed:' + error.message);
+        }
+    }
+
+
+}
+function createMessage(role, content) {
+    return {role, content}
+}
+const tools = [
+    {
+        type: "function",
+        function: {
+            name: "searchWeb",
+            description: "Perform a web search using specific keywords. (like Google search)",
+            parameters: {
+                type: "object",
+                properties: {
+                    query: { type: "string","description": "Keywords for the web search."}
+                },
+                required: ["query"]
+            }
+        }
+    }
+]
+
+function search(query) {
+    //mock
+    return {
+        "allSearchResults": [
+        {
+            "title": "Firefox 127 for developers - Mozilla | MDN",
+            "url": "https://developer.mozilla.org/en-US/docs/Mozilla/Firefox/Releases/127",
+            "snippet": "5 days ago ... Firefox 127 is the current Beta version of Firefox and ships on June 11, 2024. Changes for web developers. Developer Tools. HTML. data: ..."
+        },
+        {
+            "title": "Release Management/Release owners - MozillaWiki",
+            "url": "https://wiki.mozilla.org/Release_Management/Release_owners",
+            "snippet": "May 27, 2024 ... Firefox 127, Pascal (CET), RyanVM (EST), Haik Aftandilian (PST), bhearsum (EST), gbrown (MST), RelMan (ESR 115.12), 2024-06-11. Firefox 126 ..."
+        },
+        {
+            "title": "Milestones and key data for Firefox 127",
+            "url": "https://whattrainisitnow.com/release/?version=127",
+            "snippet": "Release day! We ship Firefox 127 at 14:00 UTC (6AM PST) at 25% rollout. June 11. In 2 weeks. Planned dot ..."
+        },
+        {
+            "title": "Firefox Beta and Developer Edition Release Notes",
+            "url": "https://www.mozilla.org/en-US/firefox/127.0beta/releasenotes/",
+            "snippet": "May 14, 2024 ... New · You can now set Firefox to automatically launch whenever you start or restart your Windows computer. · In Firefox 127, we completed work to ..."
+        },
+        {
+            "title": "Firefox version history - Wikipedia",
+            "url": "https://en.wikipedia.org/wiki/Firefox_version_history",
+            "snippet": "Firefox was created by Dave Hyatt and Blake Ross as an experimental branch of the Mozilla browser, first released as Firefox 1.0 on November 9, 2004."
+        },
+        {
+            "title": "Update Firefox to the latest release | Firefox Help",
+            "url": "https://support.mozilla.org/en-US/kb/update-firefox-latest-release",
+            "snippet": "Customize this article. Firefox. Version 128, Version 127 ... Update Firefox to the latest release. Firefox ... Firefox, download the Firefox installer, then close ..."
+        },
+        {
+            "title": "Upgraded add-on signatures required for Firefox 127 : r/firefox",
+            "url": "https://www.reddit.com/r/firefox/comments/1c4y8ey/upgraded_addon_signatures_required_for_firefox_127/",
+            "snippet": "Apr 15, 2024 ... ... Firefox 127 : r/firefox. &nbsp;. TOPICS ... date they were uploaded and whether they are ... Release (Jun 11). Add-ons installed prior to ..."
+        },
+        {
+            "title": "Firefox users on Windows 7, 8 and 8.1 moving to Extended Support ...",
+            "url": "https://support.mozilla.org/en-US/kb/firefox-users-windows-7-8-and-81-moving-extended-support",
+            "snippet": "Firefox version 115 ESR will be the last supported release for Windows 7, 8 and 8.1."
+        },
+        {
+            "title": "Unable to connect to host 127.0.0.1 on port 7055.Selenium 3 ...",
+            "url": "https://stackoverflow.com/questions/41116679/unable-to-connect-to-host-127-0-0-1-on-port-7055-selenium-3-firefox-38-6-0",
+            "snippet": "Dec 13, 2016 ... 0. See releases here. If you look at the Firefox release date and the Selenium release date, you'll see you need something that was released ..."
+        },
+        {
+            "title": "[Stable Update] 2023-08-11 - Kernels, Plasma, Nvidia, Firefox ...",
+            "url": "https://forum.manjaro.org/t/stable-update-2023-08-11-kernels-plasma-nvidia-firefox-thunderbird-pamac-pipewire-mesa/146081/127",
+            "snippet": "Aug 11, 2023 ... Hi,. In my case the up date don't solve the issue, with htop no 100% cpu use with mariadb or obs, but ksysguard show a 100% cpu use with obs ..."
+        }
+    ]
+    }
+}
+
+main();
