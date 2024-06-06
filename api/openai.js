@@ -42,6 +42,7 @@ async function handleRequest(req, res) {
     // const latestUserMessageContent = latestUserMessage.content;
 
     let requestBody = JSON.parse(JSON.stringify(requestData));
+    const model = requestBody.model;
     requestBody.stream = false;
     requestBody.stream_options = undefined;
     requestBody.max_tokens = maxTokens;
@@ -124,7 +125,7 @@ async function handleRequest(req, res) {
                 searchCount++;
                 crawlerCount++;
             }
-            functionResponse = JSON.stringify(Common.cut(functionResponse, requestBody.model, unprocessedMessages, maxTokens, toolCalls.length))
+            functionResponse = JSON.stringify(Common.cut(functionResponse, model, unprocessedMessages, maxTokens, toolCalls.length))
             if (functionResponse != null) {
                 messages.push({
                     tool_call_id: toolCall.id,
@@ -160,8 +161,9 @@ async function handleRequest(req, res) {
             stream_options: {
                 include_usage: true,
             },
-            tools: undefined,
-            tool_choice: undefined,
+            // qwen requires that
+            tools: model && !model.startsWith("gpt-") ? undefined : tools,
+            //tool_choice: undefined,
             messages: messages,
         };
         try {

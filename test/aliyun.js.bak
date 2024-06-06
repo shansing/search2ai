@@ -1,7 +1,7 @@
 // for qwen-max bug on 2024/6/4
 
 const baseUrl = 'https://dashscope.aliyuncs.com/compatible-mode'
-const apiKey = '???????'
+const apiKey = '???'
 
 async function main() {
     const userMessage = "你现在有能力联网搜索、访问网页。请用英语关键词搜索，用中文回答我的问题，并给出参考来源：\n" +
@@ -85,7 +85,7 @@ async function main() {
             //     include_usage: true,
             // },
             //摘除tools
-            tools: undefined,
+            //tools: undefined,
             tool_choice: undefined,
             messages: messages,
         };
