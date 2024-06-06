@@ -37,9 +37,9 @@ async function handleRequest(req, res) {
     const maxTokens = requestData.max_tokens || 2000;
 
     const messages = requestData.messages;
-    const userMessages = requestData.messages.filter(message => message.role === 'user');
-    const latestUserMessage = userMessages[userMessages.length - 1];
-    const latestUserMessageContent = latestUserMessage.content;
+    // const userMessages = requestData.messages.filter(message => message.role === 'user');
+    // const latestUserMessage = userMessages[userMessages.length - 1];
+    // const latestUserMessageContent = latestUserMessage.content;
 
     let requestBody = JSON.parse(JSON.stringify(requestData));
     requestBody.stream = false;
@@ -313,4 +313,5 @@ const tools = [
 ]
 
 module.exports = handleRequest;
+
 

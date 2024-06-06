@@ -17,14 +17,14 @@ const corsHeaders = {
 };
 async function handleRequest(req, res) {
     if (req.method !== 'POST') {
-        throw Error('[gemini]Method Not Allowed');
+        throw Error('[google]Method Not Allowed');
     }
     const requestData = req.body;
-    // console.log('[gemini]requestData: ', requestData);
+    // console.log('[google]requestData: ', requestData);
     const baseUrl = req.headers["x-shansing-base-url"];
-    console.log('[gemini]baseUrl: ', baseUrl);
+    console.log('[google]baseUrl: ', baseUrl);
     if (!baseUrl) {
-        throw Error('[gemini]no baseUrl provided');
+        throw Error('[google]no baseUrl provided');
     }
     const requestHeader = {
         "Content-Type": "application/json",
@@ -38,20 +38,20 @@ async function handleRequest(req, res) {
     const maxTokens = requestData?.generationConfig?.maxOutputTokens || 2000;
 
     const contents = requestData.contents;
-    const userMessages = requestData.contents.filter(content => content.role === 'user');
-    const latestUserMessage = userMessages[userMessages.length - 1];
-    const latestUserMessageContent = latestUserMessage.content;
+    // const userMessages = requestData.contents.filter(content => content.role === 'user');
+    // const latestUserMessage = userMessages[userMessages.length - 1];
+    // const latestUserMessageContent = latestUserMessage.content;
 
     let requestBody = JSON.parse(JSON.stringify(requestData));
     const queryArray = req.url.split('?')
     if (queryArray.length !== 2) {
-        throw Error('[gemini]No key provided')
+        throw Error('[google]No key provided')
     }
     const path = queryArray[0]
     const query = queryArray[1]
     let model = path.split("/")?.slice(3).join("/");
     if (model == null || model.includes("/")) {
-        throw Error('[gemini]Unable to match model')
+        throw Error('[google]Unable to match model')
     }
     model = model.split(':')[0]
 
@@ -61,38 +61,38 @@ async function handleRequest(req, res) {
         tools: tools,
     }
 
-    let GeminiResponse;
+    let googleResponse;
     try {
-        console.log('[gemini]sending the first request');
-        GeminiResponse = await fetch(`${baseUrl}/v1beta/models/${model}:generateContent?${query}`, {
+        console.log('[google]sending the first request');
+        googleResponse = await fetch(`${baseUrl}/v1beta/models/${model}:generateContent?${query}`, {
             method: 'POST',
             headers: requestHeader,
             body: JSON.stringify(requestBody)
         });
     } catch (error) {
-        throw Error('[gemini]API failed: ' + error.message);
+        throw Error('[google]API failed: ' + error.message);
     }
-    if (!GeminiResponse.ok) {
-        // console.log('url', GeminiResponse.url);
-        // console.log('[gemini]API not ok, body:', await GeminiResponse.text());
-        throw Error('[gemini]API not ok, status:' + GeminiResponse.status + ', body:' + await GeminiResponse.text());
+    if (!googleResponse.ok) {
+        // console.log('url', googleResponse.url);
+        // console.log('[google]API not ok, body:', await googleResponse.text());
+        throw Error('[google]API not ok, status:' + googleResponse.status + ', body:' + await googleResponse.text());
     }
 
-    let responseJson = await GeminiResponse.json();
-    // console.log('[gemini]确认解析后的 data 对象:', data);
+    let responseJson = await googleResponse.json();
+    // console.log('[google]确认解析后的 data 对象:', data);
     if (!responseJson) {
-        throw Error('[gemini]no response');
+        throw Error('[google]no response');
     }
-    console.log('[gemini]API response got，check if need function call...');
+    console.log('[google]API response got，check if need function call...');
     if (!responseJson.candidates || responseJson.candidates.length === 0 || !responseJson.candidates[0].content
         || responseJson.candidates[0].content.role !== 'model' || !responseJson.candidates[0].content.parts) {
-        throw Error('[gemini]response has no candidates');
+        throw Error('[google]response has no candidates');
     }
     const functionCalls = responseJson.candidates[0].content.parts
         .filter(part => !!part.functionCall)
         .map(part => part.functionCall)
     if (!responseJson.usageMetadata) {
-        throw Error('[gemini]response has no usage');
+        throw Error('[google]response has no usage');
     }
 
     let firstMaxPromptTokenNumber = responseJson.usageMetadata.promptTokenCount,
@@ -105,9 +105,9 @@ async function handleRequest(req, res) {
         ...responseJson.candidates[0].content,
         "role": "model",
     });
-    // console.log('[gemini]更新后的 messages 数组:', messages);
+    // console.log('[google]更新后的 messages 数组:', messages);
     // 检查是否有函数调用
-    // console.log('[gemini]开始检查是否有函数调用');
+    // console.log('[google]开始检查是否有函数调用');
 
 
     const availableFunctions = {
@@ -156,11 +156,11 @@ async function handleRequest(req, res) {
             "parts": responseParts
         });
     }
-    // console.log('[gemini]function call checked');
+    // console.log('[google]function call checked');
 
     if (!calledCustomFunction) {
         // 没有调用自定义函数，直接返回原始回复（转换为SSE）
-        console.log('[gemini]no function call needed, sending response as SSE format');
+        console.log('[google]no function call needed, sending response as SSE format');
         //强制流式
         const sseStream = jsonToStream(responseJson);
         res.writeHead(200, { 'Content-Type': 'application/json; charset=UTF-8', 'Cache-Control': 'no-cache', ...corsHeaders, });
@@ -173,7 +173,7 @@ async function handleRequest(req, res) {
         // return ;
     } else {
         // 如果调用了自定义函数，再次向 API 发送请求
-        console.log('[gemini]function call needed, sending request again');
+        console.log('[google]function call needed, sending request again');
         const secondRequestBody = {
             ...requestBody,
             // tools: undefined,
@@ -189,8 +189,8 @@ async function handleRequest(req, res) {
                 body: JSON.stringify(secondRequestBody)
             });
             //强制流式
-            console.log('[gemini]sending second response...');
-            // console.log('[gemini]secondRequestBody', JSON.stringify(secondRequestBody));
+            console.log('[google]sending second response...');
+            // console.log('[google]secondRequestBody', JSON.stringify(secondRequestBody));
 
             return {
                 status: secondResponse.status,
@@ -204,7 +204,7 @@ async function handleRequest(req, res) {
                 body: secondResponse.body
             };
         } catch (error) {
-            throw Error('[gemini]API second failed:' + error.message);
+            throw Error('[google]API second failed:' + error.message);
         }
     }
 
@@ -277,4 +277,5 @@ const tools = [
 ]
 
 module.exports = handleRequest;
+
 

@@ -15,6 +15,9 @@ const Common = (function() {
             {name: "qwen-long", number: 9_000}, // it's not 10_000_000
             {name: "qwen-vl-", number: 6_000},
             {name: "gemini-", number: 128_000},
+            { name: "claude-3-", number: 200_000 },
+            { name: "claude-2.1", number: 200_000 },
+            { name: "claude-", number: 100_000 },
             {name: "", number: 4_000} //default
         ],
 
@@ -72,4 +75,5 @@ const Common = (function() {
 })();
 
 module.exports = Common;
+
 

@@ -1,7 +1,8 @@
 // index.js 示例
 // const fetch = require('node-fetch');
 const handleOpenaiRequest = require('./openai.js');
-const handleGeminiRequest = require('./gemini.js');
+const handleGoogleRequest = require('./google.js');
+const handleAnthropicRequest = require('./anthropic.js');
 const process = require('process');
 const Stream = require('stream');
 const http = require('http');
@@ -81,17 +82,19 @@ module.exports = async (req, res) => {
         if (req.url.startsWith('/v1/chat/completions')) {
             response = await handleOpenaiRequest(req, res);
         } else if (req.url.startsWith('/v1beta/models')) {
-            response = await handleGeminiRequest(req, res);
+            response = await handleGoogleRequest(req, res);
+        } else if (req.url.startsWith('/v1/messages')) {
+            response = await handleAnthropicRequest(req, res);
         } else if (req.url.startsWith('/test/crawler')) {
             const url = req.body.url;
             response = { status: 200, body: JSON.stringify(await crawler(url)) };
         } else {
             // response = await handleOtherRequest(apiBase, apiKey, req, req.url);
-            response = { status: 500, body: '[Shansing He2per][search2ai]path not supported, url=' + req.url }
+            response = { status: 500, body: JSON.stringify({"error": '[Shansing He2per Online Search]path not supported, url=' + req.url })}
         }
     } catch (error) {
         console.error('index error:', error);
-        response = { status: 500, body: '[Shansing He2per][search2ai]Internal Server Error: ' + error.message }
+        response = { status: 500, body: JSON.stringify({"error": '[Shansing He2per Online Search]' + error.message })}
     }
     if (!res.headersSent) {
         res.statusCode = response.status;
@@ -157,4 +160,5 @@ const PORT = process.env.PORT || 3014;
 server.listen(PORT, () => {
     console.log(`Server is listening on port ${PORT}`);
 });
+
 
