@@ -209,7 +209,13 @@ async function handleRequest(req, res) {
 
             // stream is not supported yet so let's convert it to fake SSE
             const sseStream = jsonToStream(await secondResponse.json());
-            res.writeHead(200, { 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-cache', ...corsHeaders, });
+            res.writeHead(200, { 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-cache', ...corsHeaders,
+                        'X-Shansing-First-Prompt-Token-Number': firstMaxPromptTokenNumber,
+                        'X-Shansing-First-Completion-Token-Number': firstCompletionTokenNumber,
+                        'X-Shansing-Search-Count': searchCount,
+                        'X-Shansing-News-Count': newsCount,
+                        'X-Shansing-Crawler-Count': crawlerCount,
+            });
             sseStream.on('data', (chunk) => {
                 res.write(chunk);
             });
