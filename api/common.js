@@ -38,16 +38,17 @@ const Common = (function() {
             if (json.content && json?.content?.length || 0 > 0) {
                 //再裁剪内容（如果有）
                 let estimatedText = JSON.stringify({json, unprocessedMessages});
-                if (!tokenizer.isWithinTokenLimit(estimatedText.substring(0, estimatedText.length), maxPromptTokenNumber)) {
+                if (!tokenizer.isWithinTokenLimit(estimatedText, maxPromptTokenNumber)) {
                     const gptTokens = tokenizer.encode(estimatedText);
-                    cutLength = estimatedText.length - Math.round(estimatedText.length / gptTokens.length * maxPromptTokenNumber)
-                    while (!tokenizer.isWithinTokenLimit(estimatedText.substring(0, estimatedText.length - cutLength), maxPromptTokenNumber)) {
-                        if (json.content.length - cutLength <= 50) {
+                    let goodLength = Math.floor(estimatedText.length / gptTokens.length * maxPromptTokenNumber)
+                    while (!tokenizer.isWithinTokenLimit(fitLength(estimatedText, goodLength, false), maxPromptTokenNumber)) {
+                        if (goodLength <= 50) {
                             break;
                         }
-                        cutLength += 10
+                        goodLength -= 20
                     }
-                    json.content = runes.substr(json.content, 0, json.content.length - cutLength);
+                    cutLength = estimatedText.length - goodLength
+                    json.content = fitLength(json.content, json.content.length - cutLength, true);
                 }
             }
             console.log("cut done", {
@@ -67,6 +68,31 @@ const Common = (function() {
             //         "maxTotalTokenNumber=" + maxTotalTokenNumber + ", maxPromptTokenNumber=" + maxPromptTokenNumber)
             // }
             return json
+        }
+
+        const middle = '\n[...]\n'
+        function fitLength(content, goodLength, accurate) {
+            if (content.length <= goodLength) {
+                return content
+            }
+            if (goodLength <= middle.length) {
+                return middle
+            }
+            //留头留尾去中间
+            const halfLength = Math.floor(goodLength)
+            const start = accurate
+                ? runes.substr(content, 0, halfLength)
+                : content.substring(0, halfLength);
+            let endStartIndex = content.length - halfLength + middle.length;
+            let end;
+            if (endStartIndex > content.length) {
+                end = ""
+            } else {
+                end = accurate
+                    ? runes.substr(content, endStartIndex)
+                    : content.substring(endStartIndex);
+            }
+            return start + middle + end
         }
 
     return {
