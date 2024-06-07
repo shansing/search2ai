@@ -70,7 +70,7 @@ const Common = (function() {
             return json
         }
 
-        const middle = '\n[...]\n'
+        const middle = '\n[...Content is omitted...]\n'
         function fitLength(content, goodLength, accurate) {
             if (content.length <= goodLength) {
                 return content

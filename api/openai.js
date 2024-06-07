@@ -68,7 +68,7 @@ async function handleRequest(req, res) {
     }
     if (!openAIResponse.ok) {
         // console.log('[openai]API not ok, body:', await openAIResponse.text());
-        throw Error('[openai]API not ok, status:' + GeminiResponse.status + ', body:' + await openAIResponse.text());
+        throw Error('[openai]API not ok, status:' + openAIResponse.status + ', body:' + await openAIResponse.text());
     }
 
     let responseJson = await openAIResponse.json();

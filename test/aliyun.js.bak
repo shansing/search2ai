@@ -80,10 +80,10 @@ async function main() {
         const secondRequestBody = {
             ...requestBody,
             //这里即使改成流式、非流式，回答都不对
-            // stream: true,
-            // stream_options: {
-            //     include_usage: true,
-            // },
+            stream: true,
+            stream_options: {
+                include_usage: true,
+            },
             //摘除tools
             //tools: undefined,
             tool_choice: undefined,
@@ -105,7 +105,7 @@ async function main() {
             //     },
             //     body: secondResponse.body
             // };
-            console.log("第二轮 secondResponse", JSON.stringify(await secondResponse.json()));
+            console.log("第二轮 secondResponse", JSON.stringify(await secondResponse.text()));
         } catch (error) {
             throw Error('[openai]API second failed:' + error.message);
         }
