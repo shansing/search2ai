@@ -41,7 +41,7 @@ async function handleRequest(req, res) {
     // const latestUserMessage = userMessages[userMessages.length - 1];
     // const latestUserMessageContent = latestUserMessage.content;
 
-    let requestBody = JSON.parse(JSON.stringify(requestData));
+    let requestBody = requestData;
     const model = requestBody.model;
     requestBody.stream = false;
     requestBody.stream_options = undefined;
@@ -105,7 +105,7 @@ async function handleRequest(req, res) {
     let calledCustomFunction = false;
     if (responseJson.choices[0].message.tool_calls) {
         const toolCalls = responseJson.choices[0].message.tool_calls;
-        const unprocessedMessages = JSON.parse(JSON.stringify(messages));
+        const unprocessedMessages = JSON.stringify(messages);
         for (const toolCall of toolCalls) {
             const functionName = toolCall.function.name;
             const functionToCall = availableFunctions[functionName];

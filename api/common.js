@@ -21,13 +21,13 @@ const Common = (function() {
             {name: "", number: 4_000} //default
         ],
 
-        cut = function (json, modelName, unprocessedMessages, maxCompletionTokenNumber, divisor) {
+        cut = function (json, modelName, unprocessedMessageString, maxCompletionTokenNumber, divisor) {
             // console.log("cut...")
             const maxTotalTokenNumber = modelMaxTotalTokenNumber.find(obj => modelName.startsWith(obj.name)).number || 4000
             const maxPromptTokenNumber = Math.round((maxTotalTokenNumber - maxCompletionTokenNumber) / divisor)
             let searchCutCount = 0, cutLength = 0
             //非常粗略的估计
-            while (!tokenizer.isWithinTokenLimit(JSON.stringify({json, unprocessedMessages}), maxPromptTokenNumber)) {
+            while (!tokenizer.isWithinTokenLimit(JSON.stringify(json) + unprocessedMessageString, maxPromptTokenNumber)) {
                 //先移出搜索结果（如果有）
                 if (!json.allSearchResults || json.allSearchResults.length === 0) {
                     break;
@@ -37,7 +37,7 @@ const Common = (function() {
             }
             if (json.content && json?.content?.length || 0 > 0) {
                 //再裁剪内容（如果有）
-                let estimatedText = JSON.stringify({json, unprocessedMessages});
+                let estimatedText = JSON.stringify(json) + unprocessedMessageString;
                 if (!tokenizer.isWithinTokenLimit(estimatedText, maxPromptTokenNumber)) {
                     const gptTokens = tokenizer.encode(estimatedText);
                     let goodLength = Math.floor(estimatedText.length / gptTokens.length * maxPromptTokenNumber)

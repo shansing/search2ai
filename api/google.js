@@ -44,7 +44,7 @@ async function handleRequest(req, res) {
     // const latestUserMessage = userMessages[userMessages.length - 1];
     // const latestUserMessageContent = latestUserMessage.content;
 
-    let requestBody = JSON.parse(JSON.stringify(requestData));
+    let requestBody = requestData;
     const queryArray = req.url.split('?')
     if (queryArray.length !== 2) {
         throw Error('[google]No key provided')
@@ -120,7 +120,7 @@ async function handleRequest(req, res) {
     };
     let calledCustomFunction = false;
     if (functionCalls && functionCalls.length > 0) {
-        const unprocessedContents = JSON.parse(JSON.stringify(contents));
+        const unprocessedContents = JSON.stringify(contents);
         const responseParts = []
         for (const functionCall of functionCalls) {
             const functionName = functionCall.name;

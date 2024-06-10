@@ -42,7 +42,7 @@ async function handleRequest(req, res) {
     // const latestUserMessage = userMessages[userMessages.length - 1];
     // const latestUserMessageContent = latestUserMessage.content;
 
-    let requestBody = JSON.parse(JSON.stringify(requestData));
+    let requestBody = requestData;
     requestBody.stream = false;
     requestBody.max_tokens = maxTokens;
     // if (!Array.isArray(latestUserMessageContent)
@@ -123,7 +123,7 @@ async function handleRequest(req, res) {
     };
     let calledCustomFunction = false;
     if (toolUses && toolUses.length > 0) {
-        const unprocessedMessages = JSON.parse(JSON.stringify(messages));
+        const unprocessedMessages = JSON.stringify(messages);
         const resultContent = []
         for (const toolUse of toolUses) {
             const functionName = toolUse.name;
