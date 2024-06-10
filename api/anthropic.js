@@ -235,6 +235,16 @@ function jsonToStream(jsonData) {
     if (!jsonData?.usage?.input_tokens || !jsonData?.usage?.output_tokens) {
         console.error("[anthropic]jsonToStream content no input_tokens or output_tokens, jsonData=", JSON.stringify(jsonData))
     }
+    let content = jsonData.content?.find(content => content?.type === 'text')?.text
+    if (!content) {
+        console.error("[anthropic]jsonToStream content not found, jsonData=", JSON.stringify(jsonData))
+        if (jsonData.content?.some(content => content?.type === 'tool_use')) {
+            content = 'Another function call is needed, which is currently unsupported.'
+        } else {
+            content = 'empty text response, jsonData=' + JSON.stringify(jsonData)
+        }
+        throw Error(content)
+    }
     return new Stream.Readable({
         read() {
             const pushData = () => {
@@ -257,15 +267,6 @@ function jsonToStream(jsonData) {
                 this.push(`event: message_start\ndata: ${JSON.stringify(startData)}\n\n`, 'utf8');
                 this.push(`event: content_block_start\ndata: ${JSON.stringify( {"type":"content_block_start","index":0,"content_block":{"type":"text","text":""}} )}\n\n`, 'utf8');
                 this.push(`event: ping\ndata: ${JSON.stringify( {"type": "ping"} )}\n\n`, 'utf8');
-                let content = jsonData.content?.find(content => content?.type === 'text')?.text
-                if (!content) {
-                    console.error("[anthropic]jsonToStream content not found, jsonData=", JSON.stringify(jsonData))
-                    if (jsonData.content?.some(content => content?.type === 'tool_use')) {
-                        content = '[Online Search] Another function call is needed, which is currently unsupported.'
-                    } else {
-                        content = '[Online Search] empty text response, jsonData=' + JSON.stringify(jsonData)
-                    }
-                }
                 const contentData = {
                     "type": "content_block_delta",
                         "index": 0,
