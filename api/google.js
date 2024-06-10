@@ -181,6 +181,7 @@ async function handleRequest(req, res) {
             // tools: undefined,
             // tool_config: undefined,
             //right, it's needed
+            // to do set to never use it
             tools: tools,
             contents: contents,
         };

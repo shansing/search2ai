@@ -155,6 +155,10 @@ async function handleRequest(req, res) {
             }
         }
         // console.log('[anthropic]resultContent', JSON.stringify(resultContent));
+        resultContent.push({
+            "type": "text",
+            "text": "Please do not use any tool or call more function here. Just use the tool_result above, and answer me in my own language, inferred from my last message."
+        })
         messages.push({
             "role": "user",
             "content": resultContent
