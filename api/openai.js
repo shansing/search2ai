@@ -155,7 +155,7 @@ async function handleRequest(req, res) {
     } else {
         // 如果调用了自定义函数，再次向 API 发送请求
         console.log('[openai]function call needed, sending request again');
-        console.log('model && !model.startsWith("gpt-")', model && !model.startsWith("gpt-"), model)
+        // console.log('model && !model.startsWith("gpt-")', model && !model.startsWith("gpt-"), model)
         const secondRequestBody = {
             ...requestBody,
             stream: true,
