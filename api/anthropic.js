@@ -263,7 +263,7 @@ function jsonToStream(jsonData) {
                     if (jsonData.content?.some(content => content?.type === 'tool_use')) {
                         content = '[Online Search] Another function call is needed, which is currently unsupported.'
                     } else {
-                        content = '[Online Search] empty text response'
+                        content = '[Online Search] empty text response, jsonData=' + JSON.stringify(jsonData)
                     }
                 }
                 const contentData = {
