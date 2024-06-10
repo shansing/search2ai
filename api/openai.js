@@ -196,6 +196,9 @@ async function handleRequest(req, res) {
 }
 
 function jsonToStream(jsonData) {
+    if (!jsonData?.choices[0]?.message?.content) {
+        throw Error('empty text response, jsonData=' + JSON.stringify(jsonData))
+    }
     return new Stream.Readable({
         read() {
             const pushData = () => {
