@@ -21,10 +21,12 @@ async function handleRequest(req, res) {
     }
     const requestData = req.body;
     // console.log('[google]requestData: ', requestData);
-    const baseUrl = req.headers["x-shansing-base-url"];
+    let baseUrl = req.headers["x-shansing-base-url"];
     console.log('[google]baseUrl: ', baseUrl);
     if (!baseUrl) {
-        throw Error('[google]no baseUrl provided');
+        // throw Error('[google]no baseUrl provided');
+        baseUrl = 'https://generativelanguage.googleapis.com'
+        console.log('[google]using default baseUrl');
     }
     const requestHeader = {
         "Content-Type": "application/json",

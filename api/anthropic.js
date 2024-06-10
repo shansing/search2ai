@@ -21,10 +21,12 @@ async function handleRequest(req, res) {
     }
     const requestData = req.body;
     // console.log('[anthropic]requestData: ', requestData);
-    const baseUrl = req.headers["x-shansing-base-url"];
+    let baseUrl = req.headers["x-shansing-base-url"];
     console.log('[anthropic]baseUrl: ', baseUrl);
     if (!baseUrl) {
-        throw Error('[anthropic]no baseUrl provided');
+        // throw Error('[anthropic]no baseUrl provided');
+        baseUrl = 'https://api.anthropic.com'
+        console.log('[anthropic]using default baseUrl');
     }
     const requestHeader = {
         "Content-Type": "application/json",
