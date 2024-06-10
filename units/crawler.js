@@ -7,6 +7,9 @@ const {AbortError} = require("node-fetch");
 
 async function crawler(url) {
     console.log(`crawler:`, url);
+    if (url && !url.startsWith('http')) {
+        url = "http://" + url
+    }
     const controller = new AbortController();
     const timeout = setTimeout(() => {
         controller.abort();
