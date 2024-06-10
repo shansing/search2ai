@@ -260,7 +260,7 @@ function jsonToStream(jsonData) {
                 let content = jsonData.content?.find(content => content?.type === 'text')?.text
                 if (!content) {
                     console.error("[anthropic]jsonToStream content not found, jsonData=", JSON.stringify(jsonData))
-                    if (jsonData.includes("\"tool_use\"")) {
+                    if (jsonData.content?.some(content => content?.type === 'tool_use')) {
                         content = '[Online Search] Another function call is needed, which is currently unsupported.'
                     } else {
                         content = '[Online Search] empty text response'
