@@ -123,7 +123,7 @@ async function handleRequest(req, res) {
     };
     let calledCustomFunction = false;
     if (toolUses && toolUses.length > 0) {
-        const unprocessedMessages = JSON.stringify(messages);
+        const unprocessedMessages = JSON.stringify(messages) + JSON.stringify(extraMessage);
         const resultContent = []
         for (const toolUse of toolUses) {
             const functionName = toolUse.name;
@@ -154,11 +154,8 @@ async function handleRequest(req, res) {
                 calledCustomFunction = true;
             }
         }
+        resultContent.push(extraMessage)
         // console.log('[anthropic]resultContent', JSON.stringify(resultContent));
-        resultContent.push({
-            "type": "text",
-            "text": "Please do not use any tool or call more function here. Just use the tool_result above, and answer me in my own language, inferred from my last message."
-        })
         messages.push({
             "role": "user",
             "content": resultContent
@@ -189,7 +186,7 @@ async function handleRequest(req, res) {
             tools: tools,
             messages: messages,
             // stream is not supported yet
-            stream: false,
+            stream: true,
         };
         try {
             let secondResponse = await fetch(`${baseUrl}/v1/messages`, {
@@ -201,33 +198,33 @@ async function handleRequest(req, res) {
             console.log('[anthropic]sending second response...');
             // console.log('[anthropic]secondRequestBody', JSON.stringify(secondRequestBody));
 
-            // return {
-            //     status: secondResponse.status,
-            //     headers: { 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-cache',...corsHeaders,
-            //         'X-Shansing-First-Prompt-Token-Number': firstMaxPromptTokenNumber,
-            //         'X-Shansing-First-Completion-Token-Number': firstCompletionTokenNumber,
-            //         'X-Shansing-Search-Count': searchCount,
-            //         'X-Shansing-News-Count': newsCount,
-            //         'X-Shansing-Crawler-Count': crawlerCount,
-            //     },
-            //     body: secondResponse.body
-            // };
+            return {
+                status: secondResponse.status,
+                headers: { 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-cache',...corsHeaders,
+                    'X-Shansing-First-Prompt-Token-Number': firstMaxPromptTokenNumber,
+                    'X-Shansing-First-Completion-Token-Number': firstCompletionTokenNumber,
+                    'X-Shansing-Search-Count': searchCount,
+                    'X-Shansing-News-Count': newsCount,
+                    'X-Shansing-Crawler-Count': crawlerCount,
+                },
+                body: secondResponse.body
+            };
 
-            // stream is not supported yet so let's convert it to fake SSE
-            const sseStream = jsonToStream(await secondResponse.json());
-            res.writeHead(200, { 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-cache', ...corsHeaders,
-                        'X-Shansing-First-Prompt-Token-Number': firstMaxPromptTokenNumber,
-                        'X-Shansing-First-Completion-Token-Number': firstCompletionTokenNumber,
-                        'X-Shansing-Search-Count': searchCount,
-                        'X-Shansing-News-Count': newsCount,
-                        'X-Shansing-Crawler-Count': crawlerCount,
-            });
-            sseStream.on('data', (chunk) => {
-                res.write(chunk);
-            });
-            sseStream.on('end', () => {
-                res.end();
-            });
+            // // stream is not supported yet so let's convert it to fake SSE
+            // const sseStream = jsonToStream(await secondResponse.json());
+            // res.writeHead(200, { 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-cache', ...corsHeaders,
+            //             'X-Shansing-First-Prompt-Token-Number': firstMaxPromptTokenNumber,
+            //             'X-Shansing-First-Completion-Token-Number': firstCompletionTokenNumber,
+            //             'X-Shansing-Search-Count': searchCount,
+            //             'X-Shansing-News-Count': newsCount,
+            //             'X-Shansing-Crawler-Count': crawlerCount,
+            // });
+            // sseStream.on('data', (chunk) => {
+            //     res.write(chunk);
+            // });
+            // sseStream.on('end', () => {
+            //     res.end();
+            // });
         } catch (error) {
             throw Error('[anthropic]API second failed:' + error.message);
         }
@@ -350,6 +347,12 @@ const tools = [
         },
 ]
 
+const extraMessage = {
+    "type": "text",
+    "text": "Here are the tool results for your function call. Take these as all you need, and do not use any more tools now. Answer me in my language, inferred from my last message."
+}
+
 module.exports = handleRequest;
+
 
 
