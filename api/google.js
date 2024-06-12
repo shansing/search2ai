@@ -1,11 +1,12 @@
 const fetch = require('node-fetch');
 const search = require('../units/search.js');
 const crawler = require('../units/crawler.js');
-const news = require('../units/news.js');
-const lucky = require('../units/lucky.js');
+const news = require('../units/news.js.bak');
+const lucky = require('../units/lucky.js.bak');
 const Common = require('./common.js');
 const { config } = require('dotenv');
 const Stream = require('stream');
+const searchAndLucky = require("../units/searchAndLucky");
 
 config();
 
@@ -113,10 +114,8 @@ async function handleRequest(req, res) {
 
 
     const availableFunctions = {
-        "searchWeb": search,
-        "searchNews": news,
+        "searchWeb": searchAndLucky,
         "readWebPage": crawler,
-        "searchAndReadFirstResult": lucky
     };
     let calledCustomFunction = false;
     if (functionCalls && functionCalls.length > 0) {
@@ -130,15 +129,9 @@ async function handleRequest(req, res) {
             if (functionName === 'searchWeb') {
                 functionResponse = await functionToCall(functionArgs.query);
                 searchCount++;
+                crawlerCount++;
             } else if (functionName === 'readWebPage') {
                 functionResponse = await functionToCall(functionArgs.url);
-                crawlerCount++;
-            } else if (functionName === 'searchNews') {
-                functionResponse = await functionToCall(functionArgs.query);
-                newsCount++;
-            } else if (functionName === 'searchAndReadFirstResult') {
-                functionResponse = await functionToCall(functionArgs.query);
-                searchCount++;
                 crawlerCount++;
             }
             functionResponse = Common.cut(functionResponse, model, unprocessedContents, maxTokens, functionCalls.length)
@@ -231,7 +224,7 @@ const tools = [
         "function_declarations": [
             {
                 name: "searchWeb",
-                description: "Perform a web search using specific keywords. (like Google search)",
+                description: "Perform a web search using specific keywords; returns the top 10 of results and the content of the first item.",
                 parameters: {
                     type: "object",
                     properties: {
@@ -241,19 +234,8 @@ const tools = [
                 }
             },
             {
-                name: "searchNews",
-                description: "Search for news articles using specific keywords. (like Google News)",
-                parameters: {
-                    type: "object",
-                    properties: {
-                        query: { type: "string", description: "Keywords for the news search."}
-                    },
-                    required: ["query"]
-                }
-            },
-            {
                 name: "readWebPage",
-                description: "Fetch and parse the content of the given URL's webpage. (like Reader View of Firefox)",
+                description: "Fetch and parse the content of the given URL's webpage.",
                 parameters: {
                     type: "object",
                     properties: {
@@ -262,17 +244,6 @@ const tools = [
                             description: "The URL of the webpage."},
                     },
                     required: ["url"],
-                }
-            },
-            {
-                name: "searchAndReadFirstResult",
-                description: "Perform a web search and read the content of the first search result. (like I'm Feeling Lucky of Google)",
-                parameters: {
-                    type: "object",
-                    properties: {
-                        query: { type: "string","description": "Keywords for the web search."}
-                    },
-                    required: ["query"]
                 }
             },
         ]

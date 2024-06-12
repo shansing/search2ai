@@ -26,18 +26,10 @@ const Common = (function() {
             const maxTotalTokenNumber = modelMaxTotalTokenNumber.find(obj => modelName.startsWith(obj.name)).number || 4000
             const maxPromptTokenNumber = Math.round((maxTotalTokenNumber - maxCompletionTokenNumber) / divisor)
             let searchCutCount = 0, cutLength = 0
-            //非常粗略的估计
-            while (!tokenizer.isWithinTokenLimit(JSON.stringify(json) + unprocessedMessageString, maxPromptTokenNumber)) {
-                //先移出搜索结果（如果有）
-                if (!json.allSearchResults || json.allSearchResults.length === 0) {
-                    break;
-                }
-                json.allSearchResults.pop()
-                searchCutCount++
-            }
             if (json.content && json?.content?.length || 0 > 0) {
-                //再裁剪内容（如果有）
+                //先裁剪内容（如果有）
                 let estimatedText = JSON.stringify(json) + unprocessedMessageString;
+                //非常粗略的估计
                 if (!tokenizer.isWithinTokenLimit(estimatedText, maxPromptTokenNumber)) {
                     const gptTokens = tokenizer.encode(estimatedText);
                     let goodLength = Math.floor(estimatedText.length / gptTokens.length * maxPromptTokenNumber)
@@ -50,6 +42,14 @@ const Common = (function() {
                     cutLength = estimatedText.length - goodLength
                     json.content = fitLength(json.content, json.content.length - cutLength, true);
                 }
+            }
+            while (!tokenizer.isWithinTokenLimit(JSON.stringify(json) + unprocessedMessageString, maxPromptTokenNumber)) {
+                //再移出搜索结果（如果有）
+                if (!json.allSearchResults || json.allSearchResults.length === 0) {
+                    break;
+                }
+                json.allSearchResults.pop()
+                searchCutCount++
             }
             console.log("cut done", {
                 modelName,
