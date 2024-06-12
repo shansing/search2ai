@@ -1,5 +1,3 @@
-// index.js 示例
-// const fetch = require('node-fetch');
 const handleOpenaiRequest = require('./openai.js');
 const handleGoogleRequest = require('./google.js');
 const handleAnthropicRequest = require('./anthropic.js');

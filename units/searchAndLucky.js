@@ -11,7 +11,12 @@ async function searchAndLucky(query) {
             })
         }
         const url = searchResult.allSearchResults[0].url;
-        const crawlerResult = await crawler(url)
+        let crawlerResult = {}
+        try {
+            crawlerResult = await crawler(url)
+        } catch (error) {
+            console.warn(`searchAndLucky crawler failed`, query, error);
+        }
         console.log(`searchAndLucky done`, query);
         return {
             ...crawlerResult,
