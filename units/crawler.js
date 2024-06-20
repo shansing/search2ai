@@ -137,35 +137,33 @@ async function useNinjaAi(url) {
 }
 
 function isLocalOrIntranetAddress(ip) {
+    const ipv4PrivateRanges = [
+        /^10\./,
+        /^172\.(1[6-9]|2[0-9]|3[0-1])\./,
+        /^192\.168\./,
+        /^127\./,
+        /^169\.254\./,
+        /^0\./
+    ];
+
+    const ipv6PrivateRanges = [
+        /^::1$/, // localhost
+        /^fe80::/i, // link-local
+        /^fc00::/i, // unique local address
+        /^fd00::/i, // unique local address
+        /^::ffff:10\./i, // IPv4-mapped IPv6 address for 10.0.0.0/8
+        /^::ffff:172\.(1[6-9]|2[0-9]|3[0-1])\./i, // IPv4-mapped IPv6 address for 172.16.0.0/12
+        /^::ffff:192\.168\./i, // IPv4-mapped IPv6 address for 192.168.0.0/16
+        /^::ffff:127\./i, // IPv4-mapped IPv6 address for 127.0.0.0/8
+        /^::ffff:169\.254\./i, // IPv4-mapped IPv6 address for 169.254.0.0/16
+        /^::ffff:0\./i // IPv4-mapped IPv6 address for 0.0.0.0/8
+    ];
+
     if (net.isIPv4(ip)) {
-        const ipNum = ip.split('.').reduce((acc, cur) => (acc << 8) + parseInt(cur, 10), 0) >>> 0;
-        const privateNetworks = [
-            [0x0A000000, 0x0AFFFFFF], // 10.0.0.0/8
-            [0x7F000000, 0x7FFFFFFF], // 127.0.0.0/8
-            [0xAC100000, 0xAC1FFFFF], // 172.16.0.0/12
-            [0xC0A80000, 0xC0A8FFFF]  // 192.168.0.0/16
-        ];
-        for (const [start, end] of privateNetworks) {
-            if (ipNum >= start && ipNum <= end) {
-                return true;
-            }
-        }
+        return ipv4PrivateRanges.some(range => range.test(ip));
+    } else if (net.isIPv6(ip)) {
+        return ipv6PrivateRanges.some(range => range.test(ip));
     }
-
-    if (net.isIPv6(ip)) {
-        // 检查 ::1 地址
-        if (ip === '::1') {
-            return true;
-        }
-
-        const ipHex = ip.replace(/:/g, '');
-        const firstByte = parseInt(ipHex.substr(0, 2), 16);
-        return (
-            (firstByte >= 0x0A && firstByte <= 0x0A) || // fe80::/10
-            (firstByte >= 0xFD && firstByte <= 0xFE)   // fc00::/7
-        );
-    }
-
     return false;
 }
 
