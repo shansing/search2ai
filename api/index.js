@@ -88,11 +88,11 @@ module.exports = async (req, res) => {
             response = { status: 200, body: JSON.stringify(await crawler(url)) };
         } else {
             // response = await handleOtherRequest(apiBase, apiKey, req, req.url);
-            response = { status: 500, body: JSON.stringify({"error": '[Online Search]path not supported, url=' + req.url })}
+            response = { status: 500, body: JSON.stringify({"error": '[Online Search] path not supported, url=' + req.url })}
         }
     } catch (error) {
         console.error('index error:', error);
-        response = { status: 500, body: JSON.stringify({"error": '[Online Search]' + error.message })}
+        response = { status: 500, body: JSON.stringify({"error": '[Online Search] ' + error.message })}
     }
     if (!res.headersSent) {
         res.statusCode = response.status;
