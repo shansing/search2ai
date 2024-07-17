@@ -165,7 +165,7 @@ async function handleRequest(req, res) {
             });
             //强制流式
             console.log('[openai]sending second response...');
-            // console.log('[gemini]secondRequestBody', JSON.stringify(secondRequestBody));
+            // console.log('[openai]secondRequestBody', JSON.stringify(secondRequestBody));
 
             return {
                 status: secondResponse.status,

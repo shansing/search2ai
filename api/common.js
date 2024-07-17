@@ -3,28 +3,47 @@ const runes = require('runes')
 
 const Common = (function() {
 
-    const modelMaxTotalTokenNumber = [
-            {name: "gpt-4o", number: 128_000},
-            {name: "gpt-4-turbo", number: 128_000},
-            {name: "gpt-4", number: 8192},
-            {name: "gpt-3.5-turbo", number: 16385},
-            {name: "qwen-turbo", number: 6_000},
-            {name: "qwen-plus", number: 30_000},
-            {name: "qwen-max-longcontext", number: 28_000},
-            {name: "qwen-max", number: 6_000},
-            {name: "qwen-long", number: 9_000}, // it's not 10_000_000
-            {name: "qwen-vl-", number: 6_000},
-            {name: "gemini-", number: 128_000},
-            { name: "claude-3-", number: 200_000 },
-            { name: "claude-2.1", number: 200_000 },
-            { name: "claude-", number: 100_000 },
-            {name: "", number: 4_000} //default
-        ],
+    const modelThresholdTokenNumbers = [
+        { name: "gpt-4o", total: 128_000, prompt: null, completion: null },
+        { name: "gpt-4-turbo", total: 128_000, prompt: null, completion: null },
+        { name: "gpt-4", total: 8192, prompt: null, completion: null },
+        { name: "gpt-3.5-turbo", total: 16385, prompt: null, completion: null },
+        { name: "qwen-turbo", total: null, prompt: 6_000, completion: 1500 },
+        { name: "qwen-plus", total: null, prompt: 30_000, completion: 2000 },
+        {
+            name: "qwen-max-longcontext",
+            total: null,
+            prompt: 28_000,
+            completion: 2000,
+        },
+        { name: "qwen-max", total: null, prompt: 6_000, completion: 2000 },
+        { name: "qwen-long", total: null, prompt: 9_000, completion: 2000 }, // total is not 10_000_000
+        { name: "gemini-", total: null, prompt: 128_000, completion: 8192 }, //1.5flash 1,048,576,000;  1.5pro 2,097,152,000;  but under 128k is cheap
+        { name: "claude-3-", total: 200_000, prompt: null, completion: 4096 },
+        { name: "claude-2.1", total: 200_000, prompt: null, completion: 4096 },
+        { name: "claude-", total: 100_000, prompt: null, completion: 4096 },
+        { name: "", total: 4_000, prompt: null, completion: null }, //default
+    ];
 
-        cut = function (json, modelName, unprocessedMessageString, maxCompletionTokenNumber, divisor) {
+    const calculatePromptTokenThreshold = function (model, maxCompletionToken, knownPromptNumber) {
+        const modelThresholdTokenNumber = modelThresholdTokenNumbers?.find((obj) =>
+            model.startsWith(obj.name),
+        );
+        if (modelThresholdTokenNumber?.total != null) {
+            return (
+                modelThresholdTokenNumber.total - maxCompletionToken - knownPromptNumber
+            );
+        } else if (modelThresholdTokenNumber?.prompt != null) {
+            return modelThresholdTokenNumber.prompt - knownPromptNumber;
+        } else {
+            return 4000 - maxCompletionToken - knownPromptNumber;
+        }
+    };
+
+    const cut = function (json, modelName, unprocessedMessageString, maxCompletionTokenNumber, divisor) {
             // console.log("cut...")
-            const maxTotalTokenNumber = modelMaxTotalTokenNumber.find(obj => modelName.startsWith(obj.name)).number || 4000
-            const maxPromptTokenNumber = Math.round((maxTotalTokenNumber - maxCompletionTokenNumber) / divisor)
+            const maxPromptTokenNumber = Math.round(calculatePromptTokenThreshold(modelName, maxCompletionTokenNumber, 0) * 0.9 / divisor)
+
             let searchCutCount = 0, cutLength = 0
             if (json.content && json?.content?.length || 0 > 0) {
                 //先裁剪内容（如果有）
@@ -54,7 +73,6 @@ const Common = (function() {
             console.log("cut done", {
                 modelName,
                 maxCompletionTokenNumber,
-                maxTotalTokenNumber,
                 divisor,
                 maxPromptTokenNumber,
                 searchCutCount,
