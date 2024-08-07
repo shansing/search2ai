@@ -4,11 +4,17 @@ const runes = require('runes')
 const Common = (function() {
 
     const modelThresholdTokenNumbers = [
-        { name: "gpt-4o", total: 128_000, prompt: null, completion: 16_000 },
-        { name: "gpt-4o-mini", total: 128_000, prompt: null, completion: 16_000 },
-        { name: "gpt-4-turbo", total: 128_000, prompt: null, completion: null },
-        { name: "gpt-4", total: 8192, prompt: null, completion: null },
-        { name: "gpt-3.5-turbo", total: 16385, prompt: null, completion: null },
+        {
+            name: "gpt-4o-2024-08-06",
+            total: 128_000,
+            prompt: null,
+            completion: 16_384,
+        },
+        { name: "gpt-4o", total: 128_000, prompt: null, completion: 4_096 },
+        { name: "gpt-4o-mini", total: 128_000, prompt: null, completion: 16_384 },
+        { name: "gpt-4-turbo", total: 128_000, prompt: null, completion: 4_096 },
+        { name: "gpt-4", total: 8192, prompt: null, completion: 4_096 },
+        { name: "gpt-3.5-turbo", total: 16385, prompt: null, completion: 4_096 },
         { name: "qwen-turbo", total: null, prompt: 6_000, completion: 1500 },
         { name: "qwen-plus", total: null, prompt: 30_000, completion: 2000 },
         {
