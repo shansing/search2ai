@@ -12,6 +12,7 @@ const Common = (function() {
         },
         { name: "gpt-4o", total: 128_000, prompt: null, completion: 4_096 },
         { name: "gpt-4o-mini", total: 128_000, prompt: null, completion: 16_384 },
+        { name: "chatgpt-4o", total: 128_000, prompt: null, completion: 16_384 },
         { name: "gpt-4-turbo", total: 128_000, prompt: null, completion: 4_096 },
         { name: "gpt-4", total: 8192, prompt: null, completion: 4_096 },
         { name: "gpt-3.5-turbo", total: 16385, prompt: null, completion: 4_096 },
