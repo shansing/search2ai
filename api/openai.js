@@ -32,7 +32,7 @@ async function handleRequest(req, res) {
         "Authorization": req.headers["authorization"],
     }
 
-    const maxTokens = requestData.max_tokens || 2000;
+    const maxTokens = requestData.max_completion_tokens || requestData.max_tokens || 2000;
 
     const messages = requestData.messages;
     // const userMessages = requestData.messages.filter(message => message.role === 'user');
@@ -43,7 +43,8 @@ async function handleRequest(req, res) {
     const model = requestBody.model;
     requestBody.stream = false;
     requestBody.stream_options = undefined;
-    requestBody.max_tokens = maxTokens;
+    requestBody.max_tokens = undefined;
+    requestBody.max_completion_tokens = maxTokens;
     // if (!Array.isArray(latestUserMessageContent)
     //     || latestUserMessageContent.some(content => content?.type === 'text')) {
     requestBody = {
