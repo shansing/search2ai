@@ -16,6 +16,8 @@ const Common = (function() {
         { name: "gpt-4-turbo", total: 128_000, prompt: null, completion: 4_096 },
         { name: "gpt-4", total: 8192, prompt: null, completion: 4_096 },
         { name: "gpt-3.5-turbo", total: 16385, prompt: null, completion: 4_096 },
+        { name: "o1-preview", total: 128_000, prompt: null, completion: 32_768 },
+        { name: "o1-mini", total: 128_000, prompt: null, completion: 65_536 },
         { name: "qwen-turbo", total: null, prompt: 6_000, completion: 1500 },
         { name: "qwen-plus", total: null, prompt: 30_000, completion: 2000 },
         {
@@ -25,6 +27,7 @@ const Common = (function() {
             completion: 2000,
         },
         { name: "qwen-max", total: null, prompt: 6_000, completion: 2000 },
+        { name: "qwen-max-latest", total: null, prompt: 30_720, completion: 8_192 },
         { name: "qwen-long", total: null, prompt: 9_000, completion: 2000 }, // total is not 10_000_000
         { name: "gemini-", total: null, prompt: 128_000, completion: 8192 }, //1.5flash 1,048,576,000;  1.5pro 2,097,152,000;  but under 128k is cheap
         { name: "claude-3-", total: 200_000, prompt: null, completion: 4096 },
