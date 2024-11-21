@@ -5,6 +5,12 @@ const Common = (function() {
 
     const modelThresholdTokenNumbers = [
         {
+            name: "gpt-4o-2024-11-20",
+            total: 128_000,
+            prompt: null,
+            completion: 16_384,
+        },
+        {
             name: "gpt-4o-2024-08-06",
             total: 128_000,
             prompt: null,
