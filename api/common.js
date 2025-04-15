@@ -4,6 +4,19 @@ const runes = require('runes')
 const Common = (function() {
 
     const modelThresholdTokenNumbers = [
+        { name: "gpt-4.1", total: 1_047_576, prompt: null, completion: 32_768 },
+        {
+            name: "gpt-4o-search",
+            total: 128_000,
+            prompt: null,
+            completion: 16_384,
+        },
+        {
+            name: "gpt-4o-mini-search",
+            total: 128_000,
+            prompt: null,
+            completion: 16_384,
+        },
         {
             name: "gpt-4o-2024-11-20",
             total: 128_000,
@@ -32,6 +45,7 @@ const Common = (function() {
         { name: "o1-mini", total: 128_000, prompt: null, completion: 65_536 },
         { name: "o1", total: 200_000, prompt: null, completion: 100_000 },
         { name: "o3-mini", total: 200_000, prompt: null, completion: 100_000 },
+        { name: "qwq-plus", total: 131_072, prompt: 98_304, completion: 8_192 },
         { name: "qwen-turbo", total: null, prompt: 6_000, completion: 1500 },
         { name: "qwen-plus", total: null, prompt: 30_000, completion: 2000 },
         {
@@ -71,8 +85,28 @@ const Common = (function() {
             name: "deepseek/deepseek-r1",
             total: 64_000,
             prompt: null,
+            completion: 64_000,
+        },
+        {
+            name: "deepseek-chat",
+            total: 64_000,
+            prompt: null,
             completion: 8_000,
         },
+        {
+            name: "deepseek-reasoner",
+            total: 64_000,
+            prompt: null,
+            completion: 8_000,
+        },
+        { name: "qwen/qwq-32b", total: 131_000, prompt: null, completion: 131_000 },
+        {
+            name: "perplexity/sonar-deep-research",
+            total: 200_000,
+            prompt: null,
+            completion: 200_000,
+        },
+        { name: "grok-3", total: 131_000, prompt: null, completion: 131_000 },
         { name: "", total: 4_000, prompt: null, completion: null }, //default
     ];
 
