@@ -4,6 +4,7 @@ const runes = require('runes')
 const Common = (function() {
 
     const modelThresholdTokenNumbers = [
+        { name: "gpt-5", total: 400_000, prompt: null, completion: 128_000 },
         { name: "gpt-4.1", total: 1_047_576, prompt: null, completion: 32_768 },
         {
             name: "gpt-4o-search",
@@ -45,6 +46,7 @@ const Common = (function() {
         { name: "o1-mini", total: 128_000, prompt: null, completion: 65_536 },
         { name: "o1", total: 200_000, prompt: null, completion: 100_000 },
         { name: "o3-mini", total: 200_000, prompt: null, completion: 100_000 },
+        { name: "o4-mini", total: 200_000, prompt: null, completion: 100_000 },
         { name: "qwq-plus", total: 131_072, prompt: 98_304, completion: 8_192 },
         { name: "qwen-turbo", total: null, prompt: 6_000, completion: 1500 },
         { name: "qwen-plus", total: null, prompt: 30_000, completion: 2000 },
@@ -57,8 +59,15 @@ const Common = (function() {
         { name: "qwen-max-latest", total: null, prompt: 30_720, completion: 8_192 },
         { name: "qwen-max", total: null, prompt: 6_000, completion: 2000 },
         { name: "qwen-long", total: null, prompt: 9_000, completion: 2000 }, // total is not 10_000_000
+        { name: "gemini-2.5-", total: null, prompt: 200_000, completion: 65_536 }, //prompt under 200k is cheap
         { name: "gemini-2.0-", total: null, prompt: 1_048_576, completion: 8192 },
         { name: "gemini-", total: null, prompt: 128_000, completion: 8192 }, //1.5flash 1,048,576;  1.5pro 2,097,152;  but under 128k is cheap
+        {
+            name: "anthropic/claude-sonnet-4",
+            total: 200_000,
+            prompt: null,
+            completion: 64_000,
+        },
         {
             name: "anthropic/claude-3.7",
             total: 200_000,
@@ -82,6 +91,12 @@ const Common = (function() {
             completion: 8_000,
         },
         {
+            name: "deepseek/deepseek-r1-0528",
+            total: 163_000,
+            prompt: null,
+            completion: 32_000,
+        },
+        {
             name: "deepseek/deepseek-r1",
             total: 64_000,
             prompt: null,
@@ -89,15 +104,15 @@ const Common = (function() {
         },
         {
             name: "deepseek-chat",
-            total: 64_000,
+            total: 128_000,
             prompt: null,
             completion: 8_000,
         },
         {
             name: "deepseek-reasoner",
-            total: 64_000,
+            total: 128_000,
             prompt: null,
-            completion: 8_000,
+            completion: 64_000,
         },
         { name: "qwen/qwq-32b", total: 131_000, prompt: null, completion: 131_000 },
         {
@@ -106,6 +121,7 @@ const Common = (function() {
             prompt: null,
             completion: 200_000,
         },
+        { name: "grok-4", total: 128_000, prompt: null, completion: 128_000 }, //under 128k is cheap
         { name: "grok-3", total: 131_000, prompt: null, completion: 131_000 },
         { name: "", total: 4_000, prompt: null, completion: null }, //default
     ];
