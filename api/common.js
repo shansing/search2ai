@@ -4,6 +4,9 @@ const runes = require('runes')
 const Common = (function() {
 
     const modelThresholdTokenNumbers = [
+        { name: "gpt-5.1-chat", total: 128_000, prompt: null, completion: 16_384 },
+        { name: "gpt-5.1", total: 400_000, prompt: null, completion: 128_000 },
+        { name: "gpt-5-chat", total: 128_000, prompt: null, completion: 16_384 },
         { name: "gpt-5", total: 400_000, prompt: null, completion: 128_000 },
         { name: "gpt-4.1", total: 1_047_576, prompt: null, completion: 32_768 },
         {
@@ -62,6 +65,18 @@ const Common = (function() {
         { name: "gemini-2.5-", total: null, prompt: 200_000, completion: 65_536 }, //prompt under 200k is cheap
         { name: "gemini-2.0-", total: null, prompt: 1_048_576, completion: 8192 },
         { name: "gemini-", total: null, prompt: 128_000, completion: 8192 }, //1.5flash 1,048,576;  1.5pro 2,097,152;  but under 128k is cheap
+        {
+            name: "anthropic/claude-3.5-haiku",
+            total: 200_000,
+            prompt: null,
+            completion: 8200,
+        },
+        {
+            name: "anthropic/claude-haiku-4",
+            total: 200_000,
+            prompt: null,
+            completion: 64_000,
+        },
         {
             name: "anthropic/claude-sonnet-4",
             total: 200_000,
